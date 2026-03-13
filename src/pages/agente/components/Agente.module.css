@@ -1,0 +1,51 @@
+:root {
+    --sidebar-bg: #F9FAFB;
+    --sidebar-border: #E5E7EB;
+    --sidebar-selected-bg: #E8F5E9;
+    --sidebar-selected-text: #2E7D32;
+    --ai-bubble-bg: #FFFFFF;
+    --ai-bubble-border: #E5E7EB;
+    --user-bubble-bg: #00C853;
+    --user-bubble-text: #FFFFFF;
+    --header-gradient-start: #0F172A;
+    --header-gradient-end: #1E293B;
+    --button-bg: #00C853;
+    --main-bg: #FFFFFF;
+    --text-muted: #6B7280;
+    --input-border: #E5E7EB;
+}
+.material-symbols-outlined {
+    font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+}
+body {
+    font-family: 'Manrope', sans-serif;
+    background-color: var(--main-bg);
+}
+.sidebar {
+    background-color: var(--sidebar-bg);
+    border-right: 1px solid var(--sidebar-border);
+}
+.sidebar-item-active {
+    background-color: var(--sidebar-selected-bg);
+    color: var(--sidebar-selected-text);
+}
+.header-banner {
+    background: linear-gradient(to right, var(--header-gradient-start), var(--header-gradient-end));
+}
+.ai-message {
+    background-color: var(--ai-bubble-bg);
+    border: 1px solid var(--ai-bubble-border);
+    color: #1F2937;
+}
+.user-message {
+    background-color: var(--user-bubble-bg);
+    color: var(--user-bubble-text);
+}
+.send-button {
+    background-color: var(--button-bg);
+    color: #FFFFFF;
+}
+.input-container {
+    border: 1px solid var(--input-border);
+    background-color: #FFFFFF;
+}

@@ -1,0 +1,30 @@
+:root {
+    --deep-green: #2E7D32;
+    --light-green: #4CAF50;
+    --bg-light: #F1F8E9;
+    --accent-blue: #0288D1;
+    --accent-orange: #EF6C00;
+    --text-dark: #1B5E20;
+    --text-muted: #558B2F;
+    --white: #FFFFFF;
+    --card-border: #DCEDC8;
+    --sidebar-bg: #E8F5E9;
+}
+body {
+    font-family: 'Manrope', sans-serif;
+    background-color: var(--bg-light);
+    color: var(--text-dark);
+}
+.custom-donut {
+    background: conic-gradient(
+            var(--deep-green) 0% 35%,
+            var(--accent-blue) 35% 65%,
+            var(--accent-orange) 65% 100%
+    );
+    border-radius: 50%;
+}
+.sidebar-item-active {
+    background-color: var(--white);
+    color: var(--deep-green);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+}

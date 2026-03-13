@@ -14,17 +14,9 @@ export const Body = () => {
     const [phoneNumberInput, setPhoneNumberInput] = useState("");
 
     // 3. NUEVO: Estado para el Cliente Activo en el Sidebar (inicia con un nombre por defecto)
-    const [activeClient, setActiveClient] = useState("Alex Johnson");
+    const [activeClient, setActiveClient] = useState("");
 
-    // 4. NUEVO: Función para manejar el Sign Out
-    const handleSignOut = () => {
-        // Aquí podrías limpiar localStorage, cookies de sesión, etc.
-        // localStorage.removeItem('token');
-        console.log("Cerrando sesión...");
 
-        // Redirigimos al usuario a la página principal o de login
-        navigate('/'); // Cambia '/' por la ruta de tu login si es diferente, ej: '/login'
-    };
 
     // 5. NUEVO: Función para guardar el cliente
     const handleSaveClient = () => {
@@ -79,11 +71,7 @@ export const Body = () => {
                             </div>
 
                             {/* 7. CONECTAMOS LA FUNCIÓN AL BOTÓN DE SIGN OUT */}
-                            <button
-                                onClick={handleSignOut}
-                                className="w-full py-2 bg-[var(--bg-light)] text-[var(--deep-green)] text-xs font-bold rounded-lg hover:bg-red-50 hover:text-red-600 hover:border-red-200 transition-colors">
-                                Sign Out
-                            </button>
+
                         </div>
                     </div>
                 </aside>
@@ -348,9 +336,7 @@ export const Body = () => {
                                     className="w-full px-4 py-3 outline-none text-gray-700 font-medium bg-transparent"
                                 />
                             </div>
-                            <p className="text-[10px] font-medium text-[var(--text-muted)] mt-2">
-                                * Se enviará un SMS de confirmación al cliente.
-                            </p>
+
                         </div>
 
                         {/* 8. CONECTAMOS LA FUNCIÓN AL BOTÓN GUARDAR */}

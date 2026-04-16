@@ -15,14 +15,6 @@ body {
     background-color: var(--bg-light);
     color: var(--text-dark);
 }
-.custom-donut {
-    background: conic-gradient(
-            var(--deep-green) 0% 35%,
-            var(--accent-blue) 35% 65%,
-            var(--accent-orange) 65% 100%
-    );
-    border-radius: 50%;
-}
 .sidebar-item-active {
     background-color: var(--white);
     color: var(--deep-green);

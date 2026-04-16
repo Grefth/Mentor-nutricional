@@ -1,24 +1,35 @@
 import style from './Body.module.css';
 import { useNavigate } from "react-router-dom";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect, useCallback, useMemo } from "react";
+import { readActivePhone, writeActivePhone } from "../../../lib/activeUserStorage";
+import {
+    clearCachedObjectiveKcal,
+    readCachedObjectiveKcal,
+    readCachedTodayProgress,
+    writeCachedObjectiveKcal,
+    writeCachedTodayProgress,
+} from "../../../lib/objectiveProgressStorage";
+import {
+    apiNutritionToMealUi,
+    type ApiNutrition,
+    type MealUiData,
+} from "../../../lib/mealNutritionMapper";
+import { healthApiUrl } from "../../../lib/healthApi";
 
-// ---> CAMBIO 1: Definimos una interfaz para tipar los datos que (asumimos) devuelve tu API
-interface NutritionData {
-    ingredients: {
-        name: string;
-        portion: string;
-        calories: number;
-        tag: string; // ej: "High Protein", "Complex Carb"
-        tagColor: string; // ej: "bg-[var(--deep-green)]"
-    }[];
-    totalCalories: number;
-    macros: {
-        protein: { percentage: number; grams: number };
-        carbs: { percentage: number; grams: number };
-        fats: { percentage: number; grams: number };
-    };
-    fiber: number;
-    sodium: number;
+type TodayMealRow = { id: string; logged_at: string; nutrition: ApiNutrition };
+
+function formatLoggedAtLocal(iso: string): string {
+    try {
+        const d = new Date(iso);
+        return d.toLocaleString("es-MX", {
+            day: "numeric",
+            month: "short",
+            hour: "2-digit",
+            minute: "2-digit",
+        });
+    } catch {
+        return iso;
+    }
 }
 
 export const Body = () => {
@@ -26,10 +37,16 @@ export const Body = () => {
 
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [kcalValue, setKcalValue] = useState(2100);
+    /** Suma de kcal del día según el API (consumos con timestamp UTC de hoy). */
+    const [consumedTodayKcal, setConsumedTodayKcal] = useState(0);
     const [isSavingGoal, setIsSavingGoal] = useState(false);
 
     const [isAddClientModalOpen, setIsAddClientModalOpen] = useState(false);
     const [phoneNumberInput, setPhoneNumberInput] = useState("");
+    /** No permitir cerrar el modal de cliente hasta registrar teléfono (primer arranque sin LS). */
+    const [lockClientModal, setLockClientModal] = useState(false);
+    /** No permitir cerrar el modal de meta hasta guardar (objetivo ausente en servidor). */
+    const [lockKcalModal, setLockKcalModal] = useState(false);
 
     const [activeClient, setActiveClient] = useState("");
 
@@ -38,8 +55,113 @@ export const Body = () => {
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
     const [isUploadingImage, setIsUploadingImage] = useState(false);
 
-    // ---> CAMBIO 2: Estado para guardar la respuesta de la API de imágenes
-    const [nutritionData, setNutritionData] = useState<NutritionData | null>(null);
+    const [nutritionData, setNutritionData] = useState<MealUiData | null>(null);
+    /** Objeto `nutrition` crudo del último análisis (cuerpo de POST /meal/log). */
+    const [pendingLogNutrition, setPendingLogNutrition] = useState<ApiNutrition | null>(null);
+    const [mealAlreadyLogged, setMealAlreadyLogged] = useState(false);
+    const [isLoggingMeal, setIsLoggingMeal] = useState(false);
+
+    const [todayMeals, setTodayMeals] = useState<TodayMealRow[]>([]);
+    const [selectedTodayMealId, setSelectedTodayMealId] = useState<string | null>(null);
+
+    const loadObjectiveForPhone = useCallback(async (phone: string) => {
+        try {
+            const response = await fetch(
+                healthApiUrl(`/objective/${encodeURIComponent(phone)}`),
+                { headers: { accept: "application/json" } }
+            );
+            if (response.status === 404) {
+                clearCachedObjectiveKcal(phone);
+                setKcalValue(2100);
+                setIsModalOpen(true);
+                setLockKcalModal(true);
+                return;
+            }
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            const data: { objective?: string | null } = await response.json();
+            const raw = data.objective;
+            if (raw != null && String(raw).trim() !== "") {
+                const n = Number(String(raw).trim());
+                if (!Number.isNaN(n) && n > 0) {
+                    const clamped = Math.min(4000, Math.max(1200, n));
+                    setKcalValue(clamped);
+                    writeCachedObjectiveKcal(phone, clamped);
+                    setLockKcalModal(false);
+                    setIsModalOpen(false);
+                    return;
+                }
+            }
+            clearCachedObjectiveKcal(phone);
+            setKcalValue(2100);
+            setIsModalOpen(true);
+            setLockKcalModal(true);
+        } catch (error) {
+            console.error("Error al cargar objetivo calórico:", error);
+            alert("No se pudo cargar la meta calórica desde el servidor.");
+        }
+    }, []);
+
+    const loadTodayCalories = useCallback(async (phone: string) => {
+        try {
+            const response = await fetch(
+                healthApiUrl(`/today_calories/${encodeURIComponent(phone)}`),
+                { headers: { accept: "application/json" } }
+            );
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            const data: { consumed_kcal?: number } = await response.json();
+            const n = Number(data.consumed_kcal);
+            const consumed = Number.isFinite(n) && n >= 0 ? n : 0;
+            setConsumedTodayKcal(consumed);
+            writeCachedTodayProgress(phone, consumed);
+        } catch (error) {
+            console.error("Error al cargar calorías del día:", error);
+            /* Mantener valor hidratado desde localStorage si la red falla. */
+        }
+    }, []);
+
+    const loadTodayMeals = useCallback(async (phone: string) => {
+        try {
+            const response = await fetch(
+                healthApiUrl(`/meals/today/${encodeURIComponent(phone)}`),
+                { headers: { accept: "application/json" } }
+            );
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            const data: { items?: TodayMealRow[] } = await response.json();
+            const items = Array.isArray(data.items) ? data.items : [];
+            setTodayMeals(items);
+            setSelectedTodayMealId((prev) => {
+                if (!prev) return null;
+                return items.some((i) => i.id === prev) ? prev : null;
+            });
+        } catch (error) {
+            console.error("Error al cargar comidas del día:", error);
+            setTodayMeals([]);
+        }
+    }, []);
+
+    useEffect(() => {
+        const phone = readActivePhone();
+        if (!phone) {
+            setLockClientModal(true);
+            setIsAddClientModalOpen(true);
+            return;
+        }
+        setActiveClient(phone);
+        const cachedGoal = readCachedObjectiveKcal(phone);
+        if (cachedGoal !== null) {
+            setKcalValue(cachedGoal);
+        }
+        setConsumedTodayKcal(readCachedTodayProgress(phone));
+        void loadObjectiveForPhone(phone);
+        void loadTodayCalories(phone);
+        void loadTodayMeals(phone);
+    }, [loadObjectiveForPhone, loadTodayCalories, loadTodayMeals]);
 
     const convertToBase64 = (file: File): Promise<string> => {
         return new Promise((resolve, reject) => {
@@ -64,14 +186,19 @@ export const Body = () => {
     const handleUploadImage = async () => {
         if (!selectedFile) return;
 
+        const userId = activeClient.trim();
+        if (!userId) {
+            alert("Selecciona o registra un cliente primero.");
+            return;
+        }
+
         setIsUploadingImage(true);
-        const userId = activeClient !== "" ? activeClient : "6624263510";
 
         try {
             const base64Image = await convertToBase64(selectedFile);
             const mimeType = selectedFile.type;
 
-            const response = await fetch(`https://health-dip521ip3-grefth23-gmailcoms-projects.vercel.app/image/${userId}`, {
+            const response = await fetch(healthApiUrl(`/image/${encodeURIComponent(userId)}`), {
                 method: 'POST',
                 headers: {
                     'accept': 'application/json',
@@ -87,33 +214,17 @@ export const Body = () => {
                 throw new Error(`Error HTTP: ${response.status}`);
             }
 
-            // ---> CAMBIO 3: Guardamos la respuesta en el estado.
-            // NOTA: Ajusta el mapeo de `data` según la estructura real que te devuelva tu API en Vercel.
-            const data = await response.json();
-            console.log("Análisis recibido:", data);
+            const data: { nutrition?: ApiNutrition } = await response.json();
+            const nutrition = data.nutrition;
+            if (!nutrition || typeof nutrition !== "object") {
+                throw new Error("Respuesta sin nutrition");
+            }
 
-            // Asumiendo que tu API devuelve directamente un objeto similar a la interfaz NutritionData
-            // setNutritionData(data);
-
-            // Como no conozco el JSON exacto de tu API, aquí simulo una respuesta exitosa
-            // basada en los datos duros que tenías en el HTML para que veas cómo funciona el renderizado dinámico:
-            setNutritionData({
-                ingredients: [
-                    { name: "Atlantic Salmon", portion: "Grilled • 150g", calories: 310, tag: "High Protein", tagColor: "bg-[var(--deep-green)]" },
-                    { name: "Organic Quinoa", portion: "Steamed • 100g", calories: 120, tag: "Complex Carb", tagColor: "bg-[var(--accent-blue)]" }
-                ],
-                totalCalories: 430,
-                macros: {
-                    protein: { percentage: 35, grams: 38 },
-                    carbs: { percentage: 30, grams: 32 },
-                    fats: { percentage: 35, grams: 16 }
-                },
-                fiber: 9.5,
-                sodium: 180
-            });
-
-            alert("Imagen analizada con éxito");
-
+            setSelectedTodayMealId(null);
+            setPendingLogNutrition(nutrition);
+            setNutritionData(apiNutritionToMealUi(nutrition));
+            setMealAlreadyLogged(false);
+            alert("Análisis listo. Revisa los datos y pulsa «Registrar en diario» para sumar las calorías.");
         } catch (error) {
             console.error("Error al subir la imagen:", error);
             alert("Hubo un problema al subir la imagen.");
@@ -122,12 +233,47 @@ export const Body = () => {
         }
     };
 
+    const handleLogMeal = async () => {
+        const userId = activeClient.trim();
+        if (!userId || !pendingLogNutrition) {
+            alert("Primero analiza una imagen de comida.");
+            return;
+        }
+        if (mealAlreadyLogged) return;
+
+        setIsLoggingMeal(true);
+        try {
+            const response = await fetch(healthApiUrl(`/meal/log/${encodeURIComponent(userId)}`), {
+                method: "POST",
+                headers: {
+                    accept: "application/json",
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ nutrition: pendingLogNutrition }),
+            });
+            if (!response.ok) {
+                throw new Error(`Error HTTP: ${response.status}`);
+            }
+            setMealAlreadyLogged(true);
+            void loadTodayCalories(userId);
+            void loadTodayMeals(userId);
+            alert("Comida registrada en tu diario.");
+        } catch (error) {
+            console.error("Error al registrar comida:", error);
+            alert("No se pudo guardar en el diario. Inténtalo de nuevo.");
+        } finally {
+            setIsLoggingMeal(false);
+        }
+    };
+
     const handleSaveGoal = async () => {
+        const userId = activeClient.trim();
+        if (!userId) return;
+
         setIsSavingGoal(true);
-        const userId = activeClient !== "" ? activeClient : "6624263510";
 
         try {
-            const response = await fetch(`https://health-dip521ip3-grefth23-gmailcoms-projects.vercel.app/set_objective/${userId}`, {
+            const response = await fetch(healthApiUrl(`/set_objective/${encodeURIComponent(userId)}`), {
                 method: 'POST',
                 headers: {
                     'accept': 'application/json',
@@ -137,6 +283,8 @@ export const Body = () => {
             });
 
             if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+            writeCachedObjectiveKcal(userId, kcalValue);
+            setLockKcalModal(false);
             setIsModalOpen(false);
         } catch (error) {
             console.error("Error al guardar el objetivo calórico:", error);
@@ -146,12 +294,58 @@ export const Body = () => {
     };
 
     const handleSaveClient = () => {
-        if (phoneNumberInput.trim() !== "") {
-            setActiveClient(phoneNumberInput);
-            setIsAddClientModalOpen(false);
-            setPhoneNumberInput("");
+        const trimmed = phoneNumberInput.trim();
+        if (!trimmed) return;
+
+        writeActivePhone(trimmed);
+        setActiveClient(trimmed);
+        setIsAddClientModalOpen(false);
+        setPhoneNumberInput("");
+        setLockClientModal(false);
+
+        setNutritionData(null);
+        setPendingLogNutrition(null);
+        setMealAlreadyLogged(false);
+        setTodayMeals([]);
+        setSelectedTodayMealId(null);
+        setSelectedFile(null);
+        if (previewUrl) {
+            URL.revokeObjectURL(previewUrl);
         }
+        setPreviewUrl(null);
+        if (fileInputRef.current) {
+            fileInputRef.current.value = "";
+        }
+
+        const cachedGoal = readCachedObjectiveKcal(trimmed);
+        setKcalValue(cachedGoal ?? 2100);
+        setConsumedTodayKcal(readCachedTodayProgress(trimmed));
+
+        void loadObjectiveForPhone(trimmed);
+        void loadTodayCalories(trimmed);
+        void loadTodayMeals(trimmed);
     };
+
+    const openClientModal = useCallback(() => {
+        setLockClientModal(false);
+        setPhoneNumberInput(activeClient.trim() ? activeClient : "");
+        setIsAddClientModalOpen(true);
+    }, [activeClient]);
+
+    const displayMeal = useMemo((): MealUiData | null => {
+        if (selectedTodayMealId) {
+            const row = todayMeals.find((m) => m.id === selectedTodayMealId);
+            if (row?.nutrition && typeof row.nutrition === "object") {
+                return apiNutritionToMealUi(row.nutrition);
+            }
+        }
+        return nutritionData;
+    }, [selectedTodayMealId, todayMeals, nutritionData]);
+
+    const kcalConsumedDisplay = new Intl.NumberFormat("es-MX").format(Math.round(consumedTodayKcal));
+    const kcalGoalDisplay = new Intl.NumberFormat("es-MX").format(kcalValue);
+    const todayProgressPercent =
+        kcalValue > 0 ? Math.min(100, (consumedTodayKcal / kcalValue) * 100) : 0;
 
     return (
         <div className="min-h-screen">
@@ -203,15 +397,44 @@ export const Body = () => {
 
                         <div className="flex items-center gap-6">
                             <div className="flex items-center gap-3">
-                                <button
-                                    onClick={() => setIsAddClientModalOpen(true)}
-                                    className="hidden sm:flex items-center gap-2 bg-[var(--deep-green)] text-white px-4 py-2 rounded-lg font-semibold text-sm shadow-lg shadow-green-900/20 hover:bg-[var(--light-green)] transition-colors">
-                                    <span className="material-symbols-outlined text-[20px]">person_add</span>
-                                    Nuevo Cliente
-                                </button>
+                                {activeClient.trim() ? (
+                                    <div className="hidden sm:flex items-center gap-2">
+                                        <button
+                                            type="button"
+                                            onClick={openClientModal}
+                                            title={activeClient}
+                                            aria-label={`Cliente activo: ${activeClient}`}
+                                            className="flex items-center gap-2 max-w-[220px] px-3 py-2 rounded-lg border border-[var(--card-border)] bg-[var(--bg-light)] text-[var(--deep-green)] text-sm font-semibold shadow-sm hover:border-[var(--deep-green)] transition-colors text-left"
+                                        >
+                                            <span className="material-symbols-outlined text-[20px] shrink-0">phone</span>
+                                            <span className="truncate">{activeClient}</span>
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={openClientModal}
+                                            aria-label="Cambiar número de cliente"
+                                            className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-[var(--deep-green)] text-[var(--deep-green)] text-sm font-semibold hover:bg-[var(--deep-green)] hover:text-white transition-colors"
+                                        >
+                                            <span className="material-symbols-outlined text-[18px]">edit</span>
+                                            Cambiar
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <button
+                                        type="button"
+                                        onClick={openClientModal}
+                                        className="hidden sm:flex items-center gap-2 bg-[var(--deep-green)] text-white px-4 py-2 rounded-lg font-semibold text-sm shadow-lg shadow-green-900/20 hover:bg-[var(--light-green)] transition-colors"
+                                    >
+                                        <span className="material-symbols-outlined text-[20px]">person_add</span>
+                                        Agregar cliente
+                                    </button>
+                                )}
 
                                 <button
-                                    onClick={() => setIsModalOpen(true)}
+                                    onClick={() => {
+                                        setLockKcalModal(false);
+                                        setIsModalOpen(true);
+                                    }}
                                     className="hidden sm:flex items-center gap-2 bg-slate-900 dark:bg-blend-darken text-white px-4 py-2 rounded-lg font-semibold text-sm shadow-lg shadow-slate-200 dark:shadow-none hover:opacity-90 transition-opacity">
                                     <span className="material-symbols-outlined text-[20px]">tune</span>
                                     Meta Kcal
@@ -221,9 +444,14 @@ export const Body = () => {
                             <div className="text-right hidden xl:block border-l border-[var(--card-border)] pl-6">
                                 <p className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest mb-1">Today's Progress</p>
                                 <div className="flex items-center gap-3">
-                                    <span className="text-sm font-extrabold text-[var(--deep-green)]">1,640 / {kcalValue} kcal</span>
+                                    <span className="text-sm font-extrabold text-[var(--deep-green)]">
+                                        {kcalConsumedDisplay} / {kcalGoalDisplay} kcal
+                                    </span>
                                     <div className="w-32 h-2 bg-[var(--bg-light)] rounded-full overflow-hidden border border-[var(--card-border)]">
-                                        <div className="bg-[var(--light-green)] h-full" style={{ width: `${(1640 / kcalValue) * 100}%` }}></div>
+                                        <div
+                                            className="bg-[var(--light-green)] h-full transition-[width] duration-300 ease-out"
+                                            style={{ width: `${todayProgressPercent}%` }}
+                                        />
                                     </div>
                                 </div>
                             </div>
@@ -266,7 +494,14 @@ export const Body = () => {
                                             <div className="relative w-full max-w-md aspect-video rounded-2xl overflow-hidden shadow-md mb-6 border border-gray-200">
                                                 <img src={previewUrl} alt="Meal preview" className="w-full h-full object-cover" />
                                                 <button
-                                                    onClick={() => { setPreviewUrl(null); setSelectedFile(null); }}
+                                                    onClick={() => {
+                                                        setPreviewUrl(null);
+                                                        setSelectedFile(null);
+                                                        setNutritionData(null);
+                                                        setPendingLogNutrition(null);
+                                                        setMealAlreadyLogged(false);
+                                                        setSelectedTodayMealId(null);
+                                                    }}
                                                     className="absolute top-3 right-3 bg-white/90 p-2 rounded-full text-red-500 hover:bg-red-50 transition-colors shadow-sm">
                                                     <span className="material-symbols-outlined text-sm">close</span>
                                                 </button>
@@ -295,6 +530,68 @@ export const Body = () => {
                                     )}
                                 </div>
 
+                                <div className="bg-white rounded-3xl p-8 shadow-sm border border-[var(--card-border)]">
+                                    <div className="flex justify-between items-center mb-4">
+                                        <h3 className="text-xl font-extrabold flex items-center gap-3 text-[var(--deep-green)]">
+                                            <span className="material-symbols-outlined text-[var(--light-green)]">restaurant_menu</span>
+                                            Comidas de hoy
+                                        </h3>
+                                        <span className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-wide">
+                                            Día UTC
+                                        </span>
+                                    </div>
+                                    <p className="text-xs text-[var(--text-muted)] mb-4">
+                                        Lista de lo registrado en el diario. Al cambiar el día (UTC) la lista se vacía sola.
+                                    </p>
+                                    {todayMeals.length === 0 ? (
+                                        <div className="text-center p-6 text-gray-400 border-2 border-dashed border-gray-200 rounded-xl text-sm">
+                                            Aún no hay comidas registradas hoy.
+                                        </div>
+                                    ) : (
+                                        <ul className="space-y-2 max-h-64 overflow-y-auto">
+                                            {todayMeals.map((row) => {
+                                                const kcal = Number(row.nutrition?.calorias_totales_kcal);
+                                                const title =
+                                                    String(row.nutrition?.nombre_platillo ?? "Comida").slice(0, 80) ||
+                                                    "Comida";
+                                                const selected = selectedTodayMealId === row.id;
+                                                return (
+                                                    <li key={row.id}>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() =>
+                                                                setSelectedTodayMealId((prev) =>
+                                                                    prev === row.id ? null : row.id
+                                                                )
+                                                            }
+                                                            className={`w-full text-left p-4 rounded-2xl border transition-colors ${
+                                                                selected
+                                                                    ? "border-[var(--deep-green)] bg-[var(--bg-light)] ring-2 ring-[var(--light-green)]/40"
+                                                                    : "border-[var(--card-border)] bg-white hover:border-[var(--light-green)]"
+                                                            }`}
+                                                        >
+                                                            <div className="flex justify-between gap-2 items-start">
+                                                                <div className="min-w-0">
+                                                                    <p className="text-[10px] font-bold text-[var(--text-muted)] uppercase">
+                                                                        {formatLoggedAtLocal(row.logged_at)}
+                                                                    </p>
+                                                                    <p className="font-extrabold text-[var(--deep-green)] text-sm leading-snug line-clamp-2">
+                                                                        {title}
+                                                                    </p>
+                                                                </div>
+                                                                <span className="shrink-0 text-sm font-black text-[var(--deep-green)]">
+                                                                    {Number.isFinite(kcal) ? `${Math.round(kcal)}` : "—"}{" "}
+                                                                    <span className="text-[9px] font-bold text-[var(--text-muted)]">kcal</span>
+                                                                </span>
+                                                            </div>
+                                                        </button>
+                                                    </li>
+                                                );
+                                            })}
+                                        </ul>
+                                    )}
+                                </div>
+
                                 {/* ---> CAMBIO 4: Renderizado condicional de los Ingredientes */}
                                 <div className="bg-white rounded-3xl p-8 shadow-sm border border-[var(--card-border)]">
                                     <div className="flex justify-between items-center mb-8">
@@ -302,14 +599,19 @@ export const Body = () => {
                                             <span className="material-symbols-outlined text-[var(--light-green)]">fact_check</span>
                                             Detected Ingredients
                                         </h3>
-                                        <button className="text-[var(--deep-green)] font-bold text-sm border-b-2 border-[var(--light-green)]">
+                                        <button type="button" className="text-[var(--deep-green)] font-bold text-sm border-b-2 border-[var(--light-green)]">
                                             Edit All
                                         </button>
                                     </div>
+                                    {displayMeal?.dishTitle ? (
+                                        <p className="text-sm font-extrabold text-[var(--deep-green)] mb-4 leading-snug">
+                                            {displayMeal.dishTitle}
+                                        </p>
+                                    ) : null}
                                     <div className="space-y-4">
-                                        {nutritionData ? (
+                                        {displayMeal ? (
                                             // Si tenemos datos de la API, iteramos sobre ellos
-                                            nutritionData.ingredients.map((ingredient, index) => (
+                                            displayMeal.ingredients.map((ingredient, index) => (
                                                 <div key={index} className="flex items-center justify-between p-5 bg-[var(--bg-light)] rounded-2xl border border-[var(--card-border)]">
                                                     <div className="flex items-center gap-5">
                                                         <div className="w-14 h-14 rounded-xl bg-[var(--card-border)] flex items-center justify-center shadow-sm">
@@ -332,7 +634,9 @@ export const Body = () => {
                                         ) : (
                                             // Si no hay datos aún, mostramos un mensaje o un "placeholder"
                                             <div className="text-center p-8 text-gray-400 border-2 border-dashed border-gray-200 rounded-xl">
-                                                <p>Sube una imagen y analízala para ver los ingredientes detectados.</p>
+                                                <p>
+                                                    Sube una imagen y analízala, o elige una comida en «Comidas de hoy» para ver el detalle.
+                                                </p>
                                             </div>
                                         )}
                                     </div>
@@ -341,6 +645,21 @@ export const Body = () => {
 
                             {/* Columna Derecha */}
                             <div className="lg:col-span-5 space-y-8">
+                                {selectedTodayMealId ? (
+                                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-4 rounded-2xl border border-[var(--deep-green)]/30 bg-[var(--bg-light)]">
+                                        <p className="text-sm font-bold text-[var(--deep-green)]">
+                                            Viendo una comida ya registrada (día UTC).
+                                        </p>
+                                        <button
+                                            type="button"
+                                            onClick={() => setSelectedTodayMealId(null)}
+                                            className="shrink-0 px-4 py-2 rounded-xl border-2 border-[var(--deep-green)] text-[var(--deep-green)] text-sm font-bold hover:bg-[var(--deep-green)] hover:text-white transition-colors"
+                                        >
+                                            Volver al análisis actual
+                                        </button>
+                                    </div>
+                                ) : null}
+
                                 {/* ---> CAMBIO 5: Renderizado condicional de Macros */}
                                 <div className="bg-white rounded-3xl p-10 shadow-sm border border-[var(--card-border)] flex flex-col items-center">
                                     <h3 className="text-xl font-extrabold self-start mb-10 flex items-center gap-3">
@@ -348,12 +667,15 @@ export const Body = () => {
                                         Macro Balance
                                     </h3>
 
-                                    {nutritionData ? (
+                                    {displayMeal ? (
                                         <>
                                             <div className="relative w-72 h-72 flex items-center justify-center mb-10">
-                                                <div className={`${style.customDonut} w-full h-full shadow-xl`}></div>
+                                                <div
+                                                    className="w-full h-full shadow-xl rounded-full"
+                                                    style={{ background: displayMeal.donutConicGradient }}
+                                                />
                                                 <div className="absolute inset-6 bg-white rounded-full flex flex-col items-center justify-center shadow-inner">
-                                                    <span className="text-5xl font-black text-[var(--deep-green)]">{nutritionData.totalCalories}</span>
+                                                    <span className="text-5xl font-black text-[var(--deep-green)]">{displayMeal.totalCalories}</span>
                                                     <span className="text-[var(--text-muted)] text-[10px] font-bold uppercase tracking-[0.2em]">Total Calories</span>
                                                 </div>
                                             </div>
@@ -363,24 +685,24 @@ export const Body = () => {
                                                         <div className="w-2.5 h-2.5 rounded-full bg-[var(--deep-green)]"></div>
                                                         <span className="text-[10px] font-bold text-[var(--text-muted)] uppercase">Protein</span>
                                                     </div>
-                                                    <p className="text-xl font-black">{nutritionData.macros.protein.percentage}%</p>
-                                                    <p className="text-[11px] font-bold text-[var(--light-green)]">{nutritionData.macros.protein.grams}g</p>
+                                                    <p className="text-xl font-black">{displayMeal.macros.protein.percentage}%</p>
+                                                    <p className="text-[11px] font-bold text-[var(--light-green)]">{displayMeal.macros.protein.grams}g</p>
                                                 </div>
                                                 <div className="text-center border-x border-[var(--card-border)]">
                                                     <div className="flex items-center justify-center gap-1.5 mb-2">
                                                         <div className="w-2.5 h-2.5 rounded-full bg-[var(--accent-blue)]"></div>
                                                         <span className="text-[10px] font-bold text-[var(--text-muted)] uppercase">Carbs</span>
                                                     </div>
-                                                    <p className="text-xl font-black">{nutritionData.macros.carbs.percentage}%</p>
-                                                    <p className="text-[11px] font-bold text-[var(--accent-blue)]">{nutritionData.macros.carbs.grams}g</p>
+                                                    <p className="text-xl font-black">{displayMeal.macros.carbs.percentage}%</p>
+                                                    <p className="text-[11px] font-bold text-[var(--accent-blue)]">{displayMeal.macros.carbs.grams}g</p>
                                                 </div>
                                                 <div className="text-center">
                                                     <div className="flex items-center justify-center gap-1.5 mb-2">
                                                         <div className="w-2.5 h-2.5 rounded-full bg-[var(--accent-orange)]"></div>
                                                         <span className="text-[10px] font-bold text-[var(--text-muted)] uppercase">Fats</span>
                                                     </div>
-                                                    <p className="text-xl font-black">{nutritionData.macros.fats.percentage}%</p>
-                                                    <p className="text-[11px] font-bold text-[var(--accent-orange)]">{nutritionData.macros.fats.grams}g</p>
+                                                    <p className="text-xl font-black">{displayMeal.macros.fats.percentage}%</p>
+                                                    <p className="text-[11px] font-bold text-[var(--accent-orange)]">{displayMeal.macros.fats.grams}g</p>
                                                 </div>
                                             </div>
                                         </>
@@ -391,30 +713,86 @@ export const Body = () => {
                                     )}
                                 </div>
 
-                                {/* ---> CAMBIO 6: Renderizado condicional de Fibra y Sodio */}
                                 <div className="grid grid-cols-2 gap-6">
                                     <div className="bg-white p-6 rounded-3xl border border-[var(--card-border)]">
-                                        <p className="text-[10px] font-bold text-[var(--text-muted)] uppercase mb-3">Fiber</p>
+                                        <p className="text-[10px] font-bold text-[var(--text-muted)] uppercase mb-3">Fibra</p>
                                         <div className="flex items-center justify-between">
-                                            <span className="text-2xl font-black">{nutritionData ? `${nutritionData.fiber}g` : '--'}</span>
+                                            <span className="text-2xl font-black">{displayMeal ? `${displayMeal.fiber}g` : "--"}</span>
                                             <span className="material-symbols-outlined text-[var(--light-green)]">trending_up</span>
                                         </div>
                                     </div>
                                     <div className="bg-white p-6 rounded-3xl border border-[var(--card-border)]">
-                                        <p className="text-[10px] font-bold text-[var(--text-muted)] uppercase mb-3">Sodium</p>
+                                        <p className="text-[10px] font-bold text-[var(--text-muted)] uppercase mb-3">Azúcar</p>
                                         <div className="flex items-center justify-between">
-                                            <span className="text-2xl font-black">{nutritionData ? `${nutritionData.sodium}mg` : '--'}</span>
-                                            <span className="material-symbols-outlined text-[var(--accent-orange)]">warning</span>
+                                            <span className="text-2xl font-black">{displayMeal ? `${displayMeal.sugar}g` : "--"}</span>
+                                            <span className="material-symbols-outlined text-[var(--accent-blue)]">cake</span>
                                         </div>
                                     </div>
                                 </div>
 
+                                <div className="bg-white rounded-3xl p-8 shadow-sm border border-[var(--card-border)]">
+                                    <h3 className="text-lg font-extrabold mb-6 flex items-center gap-2 text-[var(--deep-green)]">
+                                        <span className="material-symbols-outlined text-[var(--light-green)]">science</span>
+                                        Micronutrientes
+                                    </h3>
+                                    {displayMeal ? (
+                                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                                            {displayMeal.micronutrients.map((microRow) => (
+                                                <div
+                                                    key={microRow.key}
+                                                    className="p-4 rounded-2xl bg-[var(--bg-light)] border border-[var(--card-border)] text-center"
+                                                >
+                                                    <p className="text-[10px] font-bold text-[var(--text-muted)] uppercase mb-2">{microRow.label}</p>
+                                                    <p className="text-xl font-black text-[var(--deep-green)]">
+                                                        {new Intl.NumberFormat("es-MX", { maximumFractionDigits: 1 }).format(microRow.value)}
+                                                    </p>
+                                                    <p className="text-[10px] font-bold text-[var(--text-muted)]">{microRow.unit}</p>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    ) : (
+                                        <p className="text-center text-gray-400 py-4">Esperando análisis…</p>
+                                    )}
+                                </div>
+
+                                {displayMeal?.notes ? (
+                                    <div className="bg-amber-50 border border-amber-200 rounded-2xl p-5 text-sm text-amber-950 leading-relaxed">
+                                        <p className="text-[10px] font-bold uppercase text-amber-800 mb-2 tracking-wide">Notas</p>
+                                        {displayMeal.notes}
+                                    </div>
+                                ) : null}
+
                                 <div className="flex gap-4">
-                                    <button className="flex-1 bg-[var(--deep-green)] text-white font-bold py-5 rounded-2xl hover:bg-[var(--light-green)] transition-all shadow-lg flex items-center justify-center gap-3">
+                                    <button
+                                        type="button"
+                                        onClick={handleLogMeal}
+                                        disabled={
+                                            !!selectedTodayMealId ||
+                                            !pendingLogNutrition ||
+                                            mealAlreadyLogged ||
+                                            isLoggingMeal
+                                        }
+                                        className={`flex-1 font-bold py-5 rounded-2xl transition-all shadow-lg flex items-center justify-center gap-3
+                                            ${
+                                                !!selectedTodayMealId ||
+                                                !pendingLogNutrition ||
+                                                mealAlreadyLogged ||
+                                                isLoggingMeal
+                                                    ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                                                    : "bg-[var(--deep-green)] text-white hover:bg-[var(--light-green)]"
+                                            }`}
+                                    >
                                         <span className="material-symbols-outlined">save</span>
-                                        Log to Food Diary
+                                        {mealAlreadyLogged
+                                            ? "Registrado en el diario"
+                                            : isLoggingMeal
+                                              ? "Guardando…"
+                                              : "Registrar en el diario"}
                                     </button>
-                                    <button className="w-20 flex items-center justify-center border-2 border-[var(--card-border)] rounded-2xl text-[var(--deep-green)] hover:bg-[var(--bg-light)] transition-colors">
+                                    <button
+                                        type="button"
+                                        className="w-20 flex items-center justify-center border-2 border-[var(--card-border)] rounded-2xl text-[var(--deep-green)] hover:bg-[var(--bg-light)] transition-colors"
+                                    >
                                         <span className="material-symbols-outlined">share</span>
                                     </button>
                                 </div>
@@ -434,8 +812,14 @@ export const Body = () => {
                                 Meta de Calorías
                             </h2>
                             <button
-                                onClick={() => setIsModalOpen(false)}
-                                className="w-8 h-8 flex items-center justify-center rounded-full bg-[var(--bg-light)] text-[var(--text-muted)] hover:text-red-500 transition-colors">
+                                type="button"
+                                onClick={() => {
+                                    if (lockKcalModal) return;
+                                    setIsModalOpen(false);
+                                }}
+                                className="w-8 h-8 flex items-center justify-center rounded-full bg-[var(--bg-light)] text-[var(--text-muted)] hover:text-red-500 transition-colors"
+                                aria-label="Cerrar"
+                            >
                                 <span className="material-symbols-outlined text-sm">close</span>
                             </button>
                         </div>
@@ -491,11 +875,17 @@ export const Body = () => {
                         <div className="flex justify-between items-center mb-8">
                             <h2 className="text-2xl font-extrabold text-[var(--deep-green)] flex items-center gap-2">
                                 <span className="material-symbols-outlined">contact_phone</span>
-                                Registrar Cliente
+                                {activeClient.trim() ? "Cambiar cliente" : "Registrar Cliente"}
                             </h2>
                             <button
-                                onClick={() => setIsAddClientModalOpen(false)}
-                                className="w-8 h-8 flex items-center justify-center rounded-full bg-[var(--bg-light)] text-[var(--text-muted)] hover:text-red-500 transition-colors">
+                                type="button"
+                                onClick={() => {
+                                    if (lockClientModal && !activeClient.trim()) return;
+                                    setIsAddClientModalOpen(false);
+                                }}
+                                className="w-8 h-8 flex items-center justify-center rounded-full bg-[var(--bg-light)] text-[var(--text-muted)] hover:text-red-500 transition-colors"
+                                aria-label="Cerrar"
+                            >
                                 <span className="material-symbols-outlined text-sm">close</span>
                             </button>
                         </div>
@@ -521,10 +911,13 @@ export const Body = () => {
                         </div>
 
                         <button
+                            type="button"
                             onClick={handleSaveClient}
                             className="w-full bg-[var(--deep-green)] text-white font-bold py-4 rounded-xl hover:bg-[var(--light-green)] transition-all shadow-lg flex justify-center items-center gap-2">
-                            <span className="material-symbols-outlined text-[18px]">add_circle</span>
-                            Agregar Cliente
+                            <span className="material-symbols-outlined text-[18px]">
+                                {activeClient.trim() ? "save" : "add_circle"}
+                            </span>
+                            {activeClient.trim() ? "Actualizar cliente" : "Agregar Cliente"}
                         </button>
                     </div>
                 </div>

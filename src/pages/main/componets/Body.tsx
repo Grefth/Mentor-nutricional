@@ -15,6 +15,7 @@ import {
     type MealUiData,
 } from "../../../lib/mealNutritionMapper";
 import { healthApiUrl } from "../../../lib/healthApi";
+import { todayNutritionQueryParams } from "../../../lib/browserDayContext";
 
 type TodayMealRow = { id: string; logged_at: string; nutrition: ApiNutrition };
 
@@ -32,13 +33,165 @@ function formatLoggedAtLocal(iso: string): string {
     }
 }
 
+function StoredMealDetail({
+    meal,
+    loggedAtLabel,
+    onBack,
+}: {
+    meal: MealUiData;
+    loggedAtLabel: string;
+    onBack: () => void;
+}) {
+    return (
+        <div className="mx-auto max-w-3xl space-y-6 sm:space-y-8">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <button
+                    type="button"
+                    onClick={onBack}
+                    className="inline-flex min-h-[44px] w-fit items-center gap-2 rounded-xl border-2 border-[var(--deep-green)] px-4 py-2.5 text-sm font-bold text-[var(--deep-green)] transition-colors hover:bg-[var(--deep-green)] hover:text-white"
+                >
+                    <span className="material-symbols-outlined text-[20px]">arrow_back</span>
+                    Atrás a la lista
+                </button>
+                <p className="text-[10px] font-bold uppercase tracking-wide text-[var(--text-muted)]">{loggedAtLabel}</p>
+            </div>
+
+            <div className="rounded-3xl border border-[var(--card-border)] bg-white p-4 shadow-sm sm:p-6 lg:p-8">
+                <h3 className="mb-4 flex items-center gap-2 text-lg font-extrabold sm:gap-3 sm:text-xl">
+                    <span className="material-symbols-outlined text-[var(--light-green)]">fact_check</span>
+                    Ingredientes y componentes
+                </h3>
+                {meal.dishTitle ? (
+                    <p className="mb-4 text-sm font-extrabold leading-snug text-[var(--deep-green)]">{meal.dishTitle}</p>
+                ) : null}
+                <div className="space-y-4">
+                    {meal.ingredients.map((ingredient, index) => (
+                        <div
+                            key={index}
+                            className="flex flex-col gap-4 rounded-2xl border border-[var(--card-border)] bg-[var(--bg-light)] p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5"
+                        >
+                            <div className="flex min-w-0 items-center gap-3 sm:gap-5">
+                                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[var(--card-border)] shadow-sm sm:h-14 sm:w-14">
+                                    <span className="material-symbols-outlined text-[var(--deep-green)]">restaurant_menu</span>
+                                </div>
+                                <div className="min-w-0">
+                                    <p className="font-extrabold text-[var(--deep-green)]">{ingredient.name}</p>
+                                    <p className="text-xs font-bold text-[var(--text-muted)]">{ingredient.portion}</p>
+                                </div>
+                            </div>
+                            <div className="flex items-center justify-between gap-3 border-t border-[var(--card-border)] pt-3 sm:flex-col sm:items-end sm:border-t-0 sm:pt-0 sm:text-right">
+                                <p className="text-lg font-black">
+                                    {ingredient.calories}{" "}
+                                    <span className="text-[10px] font-bold text-[var(--text-muted)]">kcal</span>
+                                </p>
+                                <span
+                                    className={`rounded px-2 py-1 text-[9px] font-bold uppercase text-white ${ingredient.tagColor}`}
+                                >
+                                    {ingredient.tag}
+                                </span>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            </div>
+
+            <div className="flex flex-col items-center rounded-3xl border border-[var(--card-border)] bg-white p-4 shadow-sm sm:p-6 lg:p-10">
+                <h3 className="mb-6 flex w-full items-center gap-2 self-start text-lg font-extrabold sm:mb-10 sm:gap-3 sm:text-xl">
+                    <span className="material-symbols-outlined text-[var(--light-green)]">donut_large</span>
+                    Balance de macronutrientes
+                </h3>
+                <div className="relative mx-auto mb-6 flex aspect-square w-full max-w-[min(18rem,88vw)] items-center justify-center sm:mb-10 sm:max-w-[16rem]">
+                    <div className="h-full w-full rounded-full shadow-xl" style={{ background: meal.donutConicGradient }} />
+                    <div className="absolute inset-[12%] flex flex-col items-center justify-center rounded-full bg-white shadow-inner sm:inset-6">
+                        <span className="text-4xl font-black text-[var(--deep-green)] sm:text-5xl">{meal.totalCalories}</span>
+                        <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--text-muted)]">
+                            Calorías totales
+                        </span>
+                    </div>
+                </div>
+                <div className="grid w-full grid-cols-3 gap-3 sm:gap-6">
+                    <div className="text-center">
+                        <div className="mb-2 flex items-center justify-center gap-1.5">
+                            <div className="h-2.5 w-2.5 rounded-full bg-[var(--deep-green)]" />
+                            <span className="text-[10px] font-bold uppercase text-[var(--text-muted)]">Proteína</span>
+                        </div>
+                        <p className="text-xl font-black">{meal.macros.protein.percentage}%</p>
+                        <p className="text-[11px] font-bold text-[var(--light-green)]">{meal.macros.protein.grams}g</p>
+                    </div>
+                    <div className="border-x border-[var(--card-border)] text-center">
+                        <div className="mb-2 flex items-center justify-center gap-1.5">
+                            <div className="h-2.5 w-2.5 rounded-full bg-[var(--accent-blue)]" />
+                            <span className="text-[10px] font-bold uppercase text-[var(--text-muted)]">Carbohidratos</span>
+                        </div>
+                        <p className="text-xl font-black">{meal.macros.carbs.percentage}%</p>
+                        <p className="text-[11px] font-bold text-[var(--accent-blue)]">{meal.macros.carbs.grams}g</p>
+                    </div>
+                    <div className="text-center">
+                        <div className="mb-2 flex items-center justify-center gap-1.5">
+                            <div className="h-2.5 w-2.5 rounded-full bg-[var(--accent-orange)]" />
+                            <span className="text-[10px] font-bold uppercase text-[var(--text-muted)]">Grasas</span>
+                        </div>
+                        <p className="text-xl font-black">{meal.macros.fats.percentage}%</p>
+                        <p className="text-[11px] font-bold text-[var(--accent-orange)]">{meal.macros.fats.grams}g</p>
+                    </div>
+                </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3 sm:gap-6">
+                <div className="rounded-3xl border border-[var(--card-border)] bg-white p-4 sm:p-6">
+                    <p className="mb-3 text-[10px] font-bold uppercase text-[var(--text-muted)]">Fibra</p>
+                    <div className="flex items-center justify-between">
+                        <span className="text-xl font-black sm:text-2xl">{meal.fiber}g</span>
+                        <span className="material-symbols-outlined text-[var(--light-green)]">trending_up</span>
+                    </div>
+                </div>
+                <div className="rounded-3xl border border-[var(--card-border)] bg-white p-4 sm:p-6">
+                    <p className="mb-3 text-[10px] font-bold uppercase text-[var(--text-muted)]">Azúcar</p>
+                    <div className="flex items-center justify-between">
+                        <span className="text-xl font-black sm:text-2xl">{meal.sugar}g</span>
+                        <span className="material-symbols-outlined text-[var(--accent-blue)]">cake</span>
+                    </div>
+                </div>
+            </div>
+
+            <div className="rounded-3xl border border-[var(--card-border)] bg-white p-4 shadow-sm sm:p-6 lg:p-8">
+                <h3 className="mb-4 flex items-center gap-2 text-base font-extrabold text-[var(--deep-green)] sm:mb-6 sm:text-lg">
+                    <span className="material-symbols-outlined text-[var(--light-green)]">science</span>
+                    Micronutrientes
+                </h3>
+                <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+                    {meal.micronutrients.map((microRow) => (
+                        <div
+                            key={microRow.key}
+                            className="rounded-2xl border border-[var(--card-border)] bg-[var(--bg-light)] p-4 text-center"
+                        >
+                            <p className="mb-2 text-[10px] font-bold uppercase text-[var(--text-muted)]">{microRow.label}</p>
+                            <p className="text-xl font-black text-[var(--deep-green)]">
+                                {new Intl.NumberFormat("es-MX", { maximumFractionDigits: 1 }).format(microRow.value)}
+                            </p>
+                            <p className="text-[10px] font-bold text-[var(--text-muted)]">{microRow.unit}</p>
+                        </div>
+                    ))}
+                </div>
+            </div>
+
+            {meal.notes ? (
+                <div className="rounded-2xl border border-amber-200 bg-amber-50 p-5 text-sm leading-relaxed text-amber-950">
+                    <p className="mb-2 text-[10px] font-bold uppercase tracking-wide text-amber-800">Notas</p>
+                    {meal.notes}
+                </div>
+            ) : null}
+        </div>
+    );
+}
+
 export const Body = () => {
     const navigate = useNavigate();
 
     const [mobileNavOpen, setMobileNavOpen] = useState(false);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [kcalValue, setKcalValue] = useState(2100);
-    /** Suma de kcal del día según el API (consumos con timestamp UTC de hoy). */
+    /** Suma de kcal del día según el API (día civil local del navegador). */
     const [consumedTodayKcal, setConsumedTodayKcal] = useState(0);
     const [isSavingGoal, setIsSavingGoal] = useState(false);
 
@@ -64,6 +217,8 @@ export const Body = () => {
 
     const [todayMeals, setTodayMeals] = useState<TodayMealRow[]>([]);
     const [selectedTodayMealId, setSelectedTodayMealId] = useState<string | null>(null);
+    /** Vista dedicada «Lista hoy» (lista o detalle de una comida del día). */
+    const [showTodayMealsPanel, setShowTodayMealsPanel] = useState(false);
 
     const loadObjectiveForPhone = useCallback(async (phone: string) => {
         try {
@@ -79,7 +234,7 @@ export const Body = () => {
                 return;
             }
             if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
+                throw new Error(`Error HTTP: ${response.status}`);
             }
             const data: { objective?: string | null } = await response.json();
             const raw = data.objective;
@@ -106,11 +261,13 @@ export const Body = () => {
     const loadTodayCalories = useCallback(async (phone: string) => {
         try {
             const response = await fetch(
-                healthApiUrl(`/today_calories/${encodeURIComponent(phone)}`),
+                healthApiUrl(
+                    `/today_calories/${encodeURIComponent(phone)}?${todayNutritionQueryParams()}`
+                ),
                 { headers: { accept: "application/json" } }
             );
             if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
+                throw new Error(`Error HTTP: ${response.status}`);
             }
             const data: { consumed_kcal?: number } = await response.json();
             const n = Number(data.consumed_kcal);
@@ -126,11 +283,13 @@ export const Body = () => {
     const loadTodayMeals = useCallback(async (phone: string) => {
         try {
             const response = await fetch(
-                healthApiUrl(`/meals/today/${encodeURIComponent(phone)}`),
+                healthApiUrl(
+                    `/meals/today/${encodeURIComponent(phone)}?${todayNutritionQueryParams()}`
+                ),
                 { headers: { accept: "application/json" } }
             );
             if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
+                throw new Error(`Error HTTP: ${response.status}`);
             }
             const data: { items?: TodayMealRow[] } = await response.json();
             const items = Array.isArray(data.items) ? data.items : [];
@@ -216,7 +375,7 @@ export const Body = () => {
             const data: { nutrition?: ApiNutrition } = await response.json();
             const nutrition = data.nutrition;
             if (!nutrition || typeof nutrition !== "object") {
-                throw new Error("Respuesta sin nutrition");
+                throw new Error("Respuesta sin datos de nutrición");
             }
 
             setSelectedTodayMealId(null);
@@ -260,6 +419,28 @@ export const Body = () => {
         }
     };
 
+    const handleShareMeal = useCallback(async () => {
+        if (!previewUrl || !pendingLogNutrition || selectedTodayMealId || !nutritionData) {
+            return;
+        }
+        const title = nutritionData.dishTitle.trim() || "Análisis nutricional";
+        const text = [
+            title,
+            `Calorías aprox.: ${nutritionData.totalCalories} kcal`,
+            `Proteína ${nutritionData.macros.protein.grams} g · Carbohidratos ${nutritionData.macros.carbs.grams} g · Grasas ${nutritionData.macros.fats.grams} g`,
+        ].join("\n");
+        try {
+            if (typeof navigator !== "undefined" && typeof navigator.share === "function") {
+                await navigator.share({ title, text });
+            } else if (typeof navigator !== "undefined" && navigator.clipboard?.writeText) {
+                await navigator.clipboard.writeText(text);
+            }
+        } catch (e) {
+            if (e instanceof DOMException && e.name === "AbortError") return;
+            console.error("No se pudo compartir:", e);
+        }
+    }, [nutritionData, pendingLogNutrition, previewUrl, selectedTodayMealId]);
+
     const handleSaveGoal = async () => {
         const userId = activeClient.trim();
         if (!userId) return;
@@ -276,7 +457,7 @@ export const Body = () => {
                 body: JSON.stringify({ objective: kcalValue.toString() })
             });
 
-            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+            if (!response.ok) throw new Error(`Error HTTP: ${response.status}`);
             writeCachedObjectiveKcal(userId, kcalValue);
             setLockKcalModal(false);
             setIsModalOpen(false);
@@ -326,15 +507,40 @@ export const Body = () => {
         setIsAddClientModalOpen(true);
     }, [activeClient]);
 
+    const closeTodayListPanel = useCallback(() => {
+        setShowTodayMealsPanel(false);
+        setSelectedTodayMealId(null);
+    }, []);
+
+    /** Solo abre la vista de lista (no cierra el panel; para eso está «Panel»). */
+    const openTodayListPanel = useCallback(() => {
+        setShowTodayMealsPanel(true);
+        setSelectedTodayMealId(null);
+    }, []);
+
     const displayMeal = useMemo((): MealUiData | null => {
-        if (selectedTodayMealId) {
+        if (selectedTodayMealId && showTodayMealsPanel) {
             const row = todayMeals.find((m) => m.id === selectedTodayMealId);
             if (row?.nutrition && typeof row.nutrition === "object") {
                 return apiNutritionToMealUi(row.nutrition);
             }
         }
-        return nutritionData;
-    }, [selectedTodayMealId, todayMeals, nutritionData]);
+        if (!showTodayMealsPanel) {
+            return nutritionData;
+        }
+        return null;
+    }, [selectedTodayMealId, todayMeals, nutritionData, showTodayMealsPanel]);
+
+    const selectedTodayMealRow = useMemo(
+        () => (selectedTodayMealId ? todayMeals.find((m) => m.id === selectedTodayMealId) : undefined),
+        [selectedTodayMealId, todayMeals]
+    );
+
+    /** Foto cargada + análisis recibido (no modo “ver comida del historial”). */
+    const hayFotoComidaAnalizada = useMemo(
+        () => Boolean(previewUrl && pendingLogNutrition && !selectedTodayMealId),
+        [previewUrl, pendingLogNutrition, selectedTodayMealId]
+    );
 
     const kcalConsumedDisplay = new Intl.NumberFormat("es-MX").format(Math.round(consumedTodayKcal));
     const kcalGoalDisplay = new Intl.NumberFormat("es-MX").format(kcalValue);
@@ -382,7 +588,7 @@ export const Body = () => {
                             onClick={() => setMobileNavOpen(false)}
                         >
                             <span className="material-symbols-outlined">grid_view</span>
-                            Dashboard
+                            Panel
                         </a>
 
                         <button
@@ -409,124 +615,340 @@ export const Body = () => {
                                 />
                                 <div className="min-w-0 overflow-hidden">
                                     <p className="truncate text-sm font-bold" title={activeClient}>
-                                        {activeClient || "Sin Cliente"}
+                                        {activeClient || "Sin cliente"}
                                     </p>
-                                    <p className="text-[10px] font-bold uppercase text-[var(--light-green)]">Pro Client</p>
+                                    <p className="text-[10px] font-bold uppercase text-[var(--light-green)]">Cliente Pro</p>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </aside>
 
-                <main className="relative min-w-0 flex-1 overflow-y-auto">
-                    <header className="sticky top-0 z-20 flex flex-col gap-4 border-b border-[var(--card-border)] bg-white/80 px-4 py-4 backdrop-blur-md sm:flex-row sm:items-center sm:justify-between sm:px-6 sm:py-5 lg:px-10 lg:py-6">
-                        <div className="flex min-w-0 items-start gap-3">
-                            <button
-                                type="button"
-                                className="mt-0.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-[var(--card-border)] text-[var(--deep-green)] hover:bg-[var(--bg-light)] lg:hidden"
-                                aria-label="Abrir menú"
-                                onClick={() => setMobileNavOpen(true)}
-                            >
-                                <span className="material-symbols-outlined text-[24px]">menu</span>
-                            </button>
-                            <div className="min-w-0">
-                                <h1 className="break-words text-2xl font-extrabold text-[var(--deep-green)] sm:text-3xl">
-                                    Meal Analyzer
-                                </h1>
-                                <p className="text-sm font-medium text-[var(--text-muted)] sm:text-base">
-                                    Analyze your intake with professional accuracy
-                                </p>
-                                <div className="mt-3 xl:hidden">
-                                    <p className="mb-1 text-[10px] font-bold uppercase tracking-widest text-[var(--text-muted)]">
-                                        Progreso hoy
-                                    </p>
-                                    <div className="flex flex-wrap items-center gap-2">
-                                        <span className="text-xs font-extrabold text-[var(--deep-green)] sm:text-sm">
-                                            {kcalConsumedDisplay} / {kcalGoalDisplay} kcal
-                                        </span>
-                                        <div className="h-2 min-w-[6rem] flex-1 max-w-[10rem] overflow-hidden rounded-full border border-[var(--card-border)] bg-[var(--bg-light)]">
-                                            <div
-                                                className="h-full bg-[var(--light-green)] transition-[width] duration-300 ease-out"
-                                                style={{ width: `${todayProgressPercent}%` }}
-                                            />
+                <main className="relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
+                    <header
+                        className={`sticky top-0 z-20 flex shrink-0 flex-col border-b border-[var(--card-border)] bg-white/80 backdrop-blur-md sm:px-6 lg:px-10 ${
+                            showTodayMealsPanel
+                                ? "gap-3 px-4 py-3"
+                                : "gap-4 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:py-5 lg:py-6"
+                        }`}
+                    >
+                        {!showTodayMealsPanel ? (
+                            <>
+                                <div className="flex min-w-0 items-start gap-3">
+                                    <button
+                                        type="button"
+                                        className="mt-0.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-[var(--card-border)] text-[var(--deep-green)] hover:bg-[var(--bg-light)] lg:hidden"
+                                        aria-label="Abrir menú"
+                                        onClick={() => setMobileNavOpen(true)}
+                                    >
+                                        <span className="material-symbols-outlined text-[24px]">menu</span>
+                                    </button>
+                                    <div className="min-w-0">
+                                        <h1 className="break-words text-2xl font-extrabold text-[var(--deep-green)] sm:text-3xl">
+                                            Analizador de comidas
+                                        </h1>
+                                        <p className="text-sm font-medium text-[var(--text-muted)] sm:text-base">
+                                            Analiza tu consumo con precisión profesional
+                                        </p>
+                                        <div className="mt-3 xl:hidden">
+                                            <p className="mb-1 text-[10px] font-bold uppercase tracking-widest text-[var(--text-muted)]">
+                                                Progreso hoy
+                                            </p>
+                                            <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:gap-2">
+                                                <span className="shrink-0 text-xs font-extrabold text-[var(--deep-green)] sm:text-sm">
+                                                    {kcalConsumedDisplay} / {kcalGoalDisplay} kcal
+                                                </span>
+                                                <div className="h-2 w-full overflow-hidden rounded-full border border-[var(--card-border)] bg-[var(--bg-light)] sm:min-w-[6rem] sm:max-w-[12rem] sm:flex-1">
+                                                    <div
+                                                        className="h-full bg-[var(--light-green)] transition-[width] duration-300 ease-out"
+                                                        style={{ width: `${todayProgressPercent}%` }}
+                                                    />
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
-                        </div>
 
-                        <div className="flex flex-wrap items-center justify-end gap-2 sm:gap-4 lg:gap-6">
-                            <div className="flex flex-wrap items-center justify-end gap-2 sm:gap-3">
-                                {activeClient.trim() ? (
-                                    <div className="flex flex-wrap items-center justify-end gap-2">
-                                        <button
-                                            type="button"
-                                            onClick={openClientModal}
-                                            title={activeClient}
-                                            aria-label={`Cliente activo: ${activeClient}`}
-                                            className="flex items-center gap-2 max-w-[220px] px-3 py-2 rounded-lg border border-[var(--card-border)] bg-[var(--bg-light)] text-[var(--deep-green)] text-sm font-semibold shadow-sm hover:border-[var(--deep-green)] transition-colors text-left"
-                                        >
-                                            <span className="material-symbols-outlined text-[20px] shrink-0">phone</span>
-                                            <span className="truncate">{activeClient}</span>
-                                        </button>
-                                        <button
-                                            type="button"
-                                            onClick={openClientModal}
-                                            aria-label="Cambiar número de cliente"
-                                            className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-[var(--deep-green)] text-[var(--deep-green)] text-sm font-semibold hover:bg-[var(--deep-green)] hover:text-white transition-colors"
-                                        >
-                                            <span className="material-symbols-outlined text-[18px]">edit</span>
-                                            Cambiar
-                                        </button>
-                                    </div>
-                                ) : (
-                                    <button
-                                        type="button"
-                                        onClick={openClientModal}
-                                        className="flex items-center gap-2 rounded-lg bg-[var(--deep-green)] px-3 py-2 text-xs font-semibold text-white shadow-lg shadow-green-900/20 transition-colors hover:bg-[var(--light-green)] sm:px-4 sm:text-sm"
-                                    >
-                                        <span className="material-symbols-outlined text-[18px] sm:text-[20px]">person_add</span>
-                                        Agregar cliente
-                                    </button>
-                                )}
+                                <div className="flex w-full min-w-0 flex-col gap-2 md:w-auto md:flex-row md:flex-wrap md:items-center md:justify-end md:gap-3 lg:gap-6">
+                                    {activeClient.trim() ? (
+                                        <>
+                                            <div className="flex w-full min-w-0 md:max-w-xl">
+                                                <div className="flex min-h-[44px] w-full min-w-0 overflow-hidden rounded-lg border border-[var(--card-border)] bg-[var(--bg-light)] shadow-sm">
+                                                    <button
+                                                        type="button"
+                                                        onClick={openClientModal}
+                                                        title={activeClient}
+                                                        aria-label={`Cliente activo: ${activeClient}. Toca para cambiar.`}
+                                                        className="flex min-w-0 flex-1 items-center gap-2 px-3 py-2.5 text-left text-sm font-semibold text-[var(--deep-green)] transition-colors hover:bg-white/60"
+                                                    >
+                                                        <span className="material-symbols-outlined shrink-0 text-[20px]">person</span>
+                                                        <span className="truncate">{activeClient}</span>
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        onClick={openClientModal}
+                                                        aria-label="Cambiar número de cliente"
+                                                        className="flex shrink-0 items-center justify-center border-l border-[var(--card-border)] bg-[var(--bg-light)] px-3 text-[var(--deep-green)] transition-colors hover:bg-white"
+                                                    >
+                                                        <span className="material-symbols-outlined text-[22px]">edit</span>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            <div
+                                                className="grid w-full min-w-0 grid-cols-2 gap-2 md:max-w-xl"
+                                                role="group"
+                                                aria-label="Acciones de cliente"
+                                            >
+                                                <button
+                                                    type="button"
+                                                    onClick={() => {
+                                                        setLockKcalModal(false);
+                                                        setIsModalOpen(true);
+                                                    }}
+                                                    className="flex min-h-[44px] min-w-0 flex-col items-center justify-center gap-0.5 rounded-lg bg-slate-900 px-1.5 py-2 text-[11px] font-semibold leading-tight text-white shadow-lg shadow-slate-200 transition-opacity hover:opacity-90 sm:flex-row sm:gap-1.5 sm:px-2 sm:text-xs md:text-sm dark:bg-blend-darken dark:shadow-none"
+                                                >
+                                                    <span className="material-symbols-outlined shrink-0 text-[18px] sm:text-[20px]">tune</span>
+                                                    <span className="max-w-full text-center leading-snug">Meta Kcal</span>
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    aria-controls="today-meals-panel"
+                                                    onClick={openTodayListPanel}
+                                                    className="flex min-h-[44px] min-w-0 flex-col items-center justify-center gap-0.5 rounded-lg border border-[var(--card-border)] bg-white px-1.5 py-2 text-[11px] font-semibold leading-tight text-[var(--deep-green)] transition-colors hover:border-[var(--deep-green)] sm:flex-row sm:gap-1.5 sm:px-2 sm:text-xs md:text-sm"
+                                                >
+                                                    <span className="material-symbols-outlined shrink-0 text-[18px]">format_list_bulleted</span>
+                                                    <span className="max-w-full text-center leading-snug">Lista hoy</span>
+                                                </button>
+                                            </div>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <button
+                                                type="button"
+                                                onClick={openClientModal}
+                                                className="flex w-full min-h-[44px] items-center justify-center gap-2 rounded-lg bg-[var(--deep-green)] px-3 text-xs font-semibold text-white shadow-lg shadow-green-900/20 transition-colors hover:bg-[var(--light-green)] sm:px-4 sm:text-sm md:w-auto"
+                                            >
+                                                <span className="material-symbols-outlined text-[18px] sm:text-[20px]">person_add</span>
+                                                Agregar cliente
+                                            </button>
+                                            <div className="flex w-full min-w-0 md:w-auto md:items-center">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => {
+                                                        setLockKcalModal(false);
+                                                        setIsModalOpen(true);
+                                                    }}
+                                                    className="flex min-h-[44px] w-full items-center justify-center gap-2 rounded-lg bg-slate-900 px-3 text-xs font-semibold text-white shadow-lg shadow-slate-200 transition-opacity hover:opacity-90 dark:bg-blend-darken dark:shadow-none sm:text-sm md:w-auto"
+                                                >
+                                                    <span className="material-symbols-outlined shrink-0 text-[18px] sm:text-[20px]">tune</span>
+                                                    Meta Kcal
+                                                </button>
+                                            </div>
+                                        </>
+                                    )}
 
-                                <button
-                                    type="button"
-                                    onClick={() => {
-                                        setLockKcalModal(false);
-                                        setIsModalOpen(true);
-                                    }}
-                                    className="flex items-center gap-2 rounded-lg bg-slate-900 px-3 py-2 text-xs font-semibold text-white shadow-lg shadow-slate-200 transition-opacity hover:opacity-90 dark:bg-blend-darken dark:shadow-none sm:px-4 sm:text-sm"
-                                >
-                                    <span className="material-symbols-outlined text-[18px] sm:text-[20px]">tune</span>
-                                    <span className="hidden min-[380px]:inline">Meta Kcal</span>
-                                </button>
-                            </div>
-
-                            <div className="hidden border-l border-[var(--card-border)] pl-6 text-right xl:block">
-                                <p className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest mb-1">Today's Progress</p>
-                                <div className="flex items-center gap-3">
-                                    <span className="text-sm font-extrabold text-[var(--deep-green)]">
-                                        {kcalConsumedDisplay} / {kcalGoalDisplay} kcal
-                                    </span>
-                                    <div className="w-32 h-2 bg-[var(--bg-light)] rounded-full overflow-hidden border border-[var(--card-border)]">
-                                        <div
-                                            className="bg-[var(--light-green)] h-full transition-[width] duration-300 ease-out"
-                                            style={{ width: `${todayProgressPercent}%` }}
-                                        />
+                                    <div className="hidden border-l border-[var(--card-border)] pl-6 text-right xl:block">
+                                        <p className="mb-1 text-[10px] font-bold uppercase tracking-widest text-[var(--text-muted)]">
+                                            Progreso del día
+                                        </p>
+                                        <div className="flex items-center gap-3">
+                                            <span className="text-sm font-extrabold text-[var(--deep-green)]">
+                                                {kcalConsumedDisplay} / {kcalGoalDisplay} kcal
+                                            </span>
+                                            <div className="h-2 w-32 overflow-hidden rounded-full border border-[var(--card-border)] bg-[var(--bg-light)]">
+                                                <div
+                                                    className="h-full bg-[var(--light-green)] transition-[width] duration-300 ease-out"
+                                                    style={{ width: `${todayProgressPercent}%` }}
+                                                />
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
+                            </>
+                        ) : (
+                            <div className="flex w-full min-w-0 flex-col gap-3">
+                                <div className="flex min-w-0 items-center gap-2">
+                                    <button
+                                        type="button"
+                                        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[var(--card-border)] text-[var(--deep-green)] hover:bg-[var(--bg-light)] lg:hidden"
+                                        aria-label="Abrir menú"
+                                        onClick={() => setMobileNavOpen(true)}
+                                    >
+                                        <span className="material-symbols-outlined text-[22px]">menu</span>
+                                    </button>
+                                    <h1 className="min-w-0 truncate text-lg font-extrabold text-[var(--deep-green)] sm:text-xl">
+                                        Comidas de hoy
+                                    </h1>
+                                </div>
+
+                                {activeClient.trim() ? (
+                                    <>
+                                        <div className="flex w-full min-w-0 md:max-w-xl md:self-end">
+                                            <div className="flex min-h-[44px] w-full min-w-0 overflow-hidden rounded-lg border border-[var(--card-border)] bg-[var(--bg-light)] shadow-sm">
+                                                <button
+                                                    type="button"
+                                                    onClick={openClientModal}
+                                                    title={activeClient}
+                                                    aria-label={`Cliente activo: ${activeClient}. Toca para cambiar.`}
+                                                    className="flex min-w-0 flex-1 items-center gap-2 px-3 py-2.5 text-left text-sm font-semibold text-[var(--deep-green)] transition-colors hover:bg-white/60"
+                                                >
+                                                    <span className="material-symbols-outlined shrink-0 text-[20px]">person</span>
+                                                    <span className="truncate">{activeClient}</span>
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={openClientModal}
+                                                    aria-label="Cambiar número de cliente"
+                                                    className="flex shrink-0 items-center justify-center border-l border-[var(--card-border)] bg-[var(--bg-light)] px-3 text-[var(--deep-green)] transition-colors hover:bg-white"
+                                                >
+                                                    <span className="material-symbols-outlined text-[22px]">edit</span>
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <div
+                                            className="grid w-full min-w-0 grid-cols-3 gap-2 md:max-w-xl md:self-end"
+                                            role="group"
+                                            aria-label="Acciones de cliente"
+                                        >
+                                            <button
+                                                type="button"
+                                                onClick={closeTodayListPanel}
+                                                className="flex min-h-[44px] min-w-0 flex-col items-center justify-center gap-0.5 rounded-lg border border-[var(--deep-green)] bg-white px-1.5 py-2 text-[11px] font-semibold leading-tight text-[var(--deep-green)] transition-colors hover:bg-[var(--deep-green)] hover:text-white sm:flex-row sm:gap-1.5 sm:px-2 sm:text-xs md:text-sm"
+                                            >
+                                                <span className="material-symbols-outlined shrink-0 text-[18px]">grid_view</span>
+                                                <span className="max-w-full text-center leading-snug">Panel</span>
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    setLockKcalModal(false);
+                                                    setIsModalOpen(true);
+                                                }}
+                                                className="flex min-h-[44px] min-w-0 flex-col items-center justify-center gap-0.5 rounded-lg bg-slate-900 px-1.5 py-2 text-[11px] font-semibold leading-tight text-white shadow-lg shadow-slate-200 transition-opacity hover:opacity-90 sm:flex-row sm:gap-1.5 sm:px-2 sm:text-xs md:text-sm dark:bg-blend-darken dark:shadow-none"
+                                            >
+                                                <span className="material-symbols-outlined shrink-0 text-[18px] sm:text-[20px]">tune</span>
+                                                <span className="max-w-full text-center leading-snug">Meta Kcal</span>
+                                            </button>
+                                            <button
+                                                type="button"
+                                                aria-controls="today-meals-panel"
+                                                onClick={openTodayListPanel}
+                                                className="flex min-h-[44px] min-w-0 flex-col items-center justify-center gap-0.5 rounded-lg border border-[var(--deep-green)] bg-[var(--bg-light)] px-1.5 py-2 text-[11px] font-semibold leading-tight text-[var(--deep-green)] ring-2 ring-[var(--light-green)]/50 sm:flex-row sm:gap-1.5 sm:px-2 sm:text-xs md:text-sm"
+                                            >
+                                                <span className="material-symbols-outlined shrink-0 text-[18px]">format_list_bulleted</span>
+                                                <span className="max-w-full text-center leading-snug">Lista hoy</span>
+                                            </button>
+                                        </div>
+                                    </>
+                                ) : (
+                                    <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-stretch">
+                                        <button
+                                            type="button"
+                                            onClick={openClientModal}
+                                            className="flex min-h-[44px] w-full items-center justify-center gap-2 rounded-lg bg-[var(--deep-green)] px-3 text-xs font-semibold text-white shadow-lg shadow-green-900/20 transition-colors hover:bg-[var(--light-green)] sm:text-sm md:w-auto"
+                                        >
+                                            <span className="material-symbols-outlined text-[18px] sm:text-[20px]">person_add</span>
+                                            Agregar cliente
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                setLockKcalModal(false);
+                                                setIsModalOpen(true);
+                                            }}
+                                            className="flex min-h-[44px] w-full items-center justify-center gap-2 rounded-lg bg-slate-900 px-3 text-xs font-semibold text-white shadow-lg shadow-slate-200 transition-opacity hover:opacity-90 dark:bg-blend-darken dark:shadow-none sm:text-sm md:w-auto"
+                                        >
+                                            <span className="material-symbols-outlined shrink-0 text-[18px] sm:text-[20px]">tune</span>
+                                            Meta Kcal
+                                        </button>
+                                    </div>
+                                )}
                             </div>
-                            <button
-                                type="button"
-                                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-[var(--card-border)] bg-[var(--bg-light)] text-[var(--deep-green)] transition-colors hover:bg-white sm:h-12 sm:w-12"
-                            >
-                                <span className="material-symbols-outlined text-[22px] sm:text-[24px]">notifications</span>
-                            </button>
-                        </div>
+                        )}
                     </header>
 
+                    <div className="min-h-0 flex-1 overflow-y-auto">
                     <div className="mx-auto max-w-7xl space-y-6 px-4 py-6 sm:space-y-8 sm:px-6 sm:py-8 lg:space-y-10 lg:p-10">
+                        {showTodayMealsPanel ? (
+                            <div id="today-meals-panel" className="space-y-6 sm:space-y-8">
+                                {!selectedTodayMealId ? (
+                                    <div className="rounded-3xl border border-[var(--card-border)] bg-white p-4 shadow-sm sm:p-6 lg:p-8">
+                                        <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                                            <h2 className="flex items-center gap-2 text-xl font-extrabold text-[var(--deep-green)] sm:text-2xl">
+                                                <span className="material-symbols-outlined text-[var(--light-green)]">restaurant_menu</span>
+                                                Comidas de hoy
+                                            </h2>
+                                            <span className="text-[10px] font-bold uppercase tracking-wide text-[var(--text-muted)]">
+                                                Tu zona horaria
+                                            </span>
+                                        </div>
+                                        <p className="mb-4 text-xs text-[var(--text-muted)]">
+                                            Solo verás lo registrado hoy según la hora de tu dispositivo. Al cambiar de día local, la lista se
+                                            actualiza sola.
+                                        </p>
+                                        {todayMeals.length === 0 ? (
+                                            <div className="rounded-xl border-2 border-dashed border-gray-200 p-8 text-center text-sm text-gray-400">
+                                                No hay comidas registradas hoy.
+                                            </div>
+                                        ) : (
+                                            <ul className="space-y-2">
+                                                {todayMeals.map((row) => {
+                                                    const kcal = Number(row.nutrition?.calorias_totales_kcal);
+                                                    const title =
+                                                        String(row.nutrition?.nombre_platillo ?? "Comida").slice(0, 80) || "Comida";
+                                                    return (
+                                                        <li key={row.id}>
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => setSelectedTodayMealId(row.id)}
+                                                                className="w-full rounded-2xl border border-[var(--card-border)] bg-white p-4 text-left transition-colors hover:border-[var(--light-green)]"
+                                                            >
+                                                                <div className="flex items-start justify-between gap-2">
+                                                                    <div className="min-w-0">
+                                                                        <p className="text-[10px] font-bold uppercase text-[var(--text-muted)]">
+                                                                            {formatLoggedAtLocal(row.logged_at)}
+                                                                        </p>
+                                                                        <p className="line-clamp-2 text-sm font-extrabold leading-snug text-[var(--deep-green)]">
+                                                                            {title}
+                                                                        </p>
+                                                                    </div>
+                                                                    <span className="shrink-0 text-sm font-black text-[var(--deep-green)]">
+                                                                        {Number.isFinite(kcal) ? `${Math.round(kcal)}` : "—"}{" "}
+                                                                        <span className="text-[9px] font-bold text-[var(--text-muted)]">
+                                                                            kcal
+                                                                        </span>
+                                                                    </span>
+                                                                </div>
+                                                            </button>
+                                                        </li>
+                                                    );
+                                                })}
+                                            </ul>
+                                        )}
+                                    </div>
+                                ) : displayMeal && selectedTodayMealRow ? (
+                                    <StoredMealDetail
+                                        meal={displayMeal}
+                                        loggedAtLabel={formatLoggedAtLocal(selectedTodayMealRow.logged_at)}
+                                        onBack={() => setSelectedTodayMealId(null)}
+                                    />
+                                ) : (
+                                    <div className="rounded-3xl border border-[var(--card-border)] bg-white p-6 shadow-sm">
+                                        <button
+                                            type="button"
+                                            onClick={() => setSelectedTodayMealId(null)}
+                                            className="inline-flex min-h-[44px] items-center gap-2 rounded-xl border-2 border-[var(--deep-green)] px-4 py-2.5 text-sm font-bold text-[var(--deep-green)] transition-colors hover:bg-[var(--deep-green)] hover:text-white"
+                                        >
+                                            <span className="material-symbols-outlined text-[20px]">arrow_back</span>
+                                            Atrás a la lista
+                                        </button>
+                                        <p className="mt-4 text-sm text-[var(--text-muted)]">
+                                            No se pudieron mostrar los datos de esta comida.
+                                        </p>
+                                    </div>
+                                )}
+                            </div>
+                        ) : (
                         <div className="grid grid-cols-1 gap-6 lg:grid-cols-12 lg:gap-10">
                             {/* Columna Izquierda */}
                             <div className="space-y-6 sm:space-y-8 lg:col-span-7">
@@ -548,18 +970,18 @@ export const Body = () => {
                                             <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-white shadow-md transition-transform group-hover:scale-110 sm:mb-6 sm:h-20 sm:w-20">
                                                 <span className="material-symbols-outlined text-3xl text-[var(--deep-green)] sm:text-4xl">add_a_photo</span>
                                             </div>
-                                            <h3 className="mb-2 text-lg font-extrabold sm:text-xl">Upload Meal Image</h3>
+                                            <h3 className="mb-2 text-lg font-extrabold sm:text-xl">Foto de tu comida</h3>
                                             <p className="mb-6 max-w-xs text-sm text-[var(--text-muted)] sm:mb-8 sm:text-base">
-                                                Take a photo of your plate to get instant nutritional facts and insights.
+                                                Toma una foto de tu plato para ver al instante calorías, macros y más.
                                             </p>
                                             <button className="pointer-events-none rounded-2xl bg-[var(--deep-green)] px-8 py-3 font-bold text-white shadow-lg shadow-green-900/10 transition-all hover:bg-[var(--light-green)] sm:px-10 sm:py-4">
-                                                Choose File
+                                                Elegir archivo
                                             </button>
                                         </div>
                                     ) : (
                                         <div className="flex flex-col items-center">
                                             <div className="relative w-full max-w-md aspect-video rounded-2xl overflow-hidden shadow-md mb-6 border border-gray-200">
-                                                <img src={previewUrl} alt="Meal preview" className="w-full h-full object-cover" />
+                                                <img src={previewUrl} alt="Vista previa del platillo" className="h-full w-full object-cover" />
                                                 <button
                                                     onClick={() => {
                                                         setPreviewUrl(null);
@@ -589,7 +1011,7 @@ export const Body = () => {
                                                     className={`flex items-center justify-center gap-2 rounded-xl px-6 py-3 font-bold text-white shadow-lg transition-all sm:px-8
                                                         ${isUploadingImage ? 'bg-gray-400 cursor-not-allowed' : 'bg-[var(--deep-green)] hover:bg-[var(--light-green)]'}`}
                                                 >
-                                                    {isUploadingImage ? 'Analizando...' : (
+                                                    {isUploadingImage ? "Analizando…" : (
                                                         <>
                                                             <span className="material-symbols-outlined text-[18px]">auto_awesome</span>
                                                             Analizar Plato
@@ -601,80 +1023,18 @@ export const Body = () => {
                                     )}
                                 </div>
 
-                                <div className="rounded-3xl border border-[var(--card-border)] bg-white p-4 shadow-sm sm:p-6 lg:p-8">
-                                    <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                                        <h3 className="flex items-center gap-2 text-lg font-extrabold text-[var(--deep-green)] sm:gap-3 sm:text-xl">
-                                            <span className="material-symbols-outlined text-[var(--light-green)]">restaurant_menu</span>
-                                            Comidas de hoy
-                                        </h3>
-                                        <span className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-wide">
-                                            Día UTC
-                                        </span>
-                                    </div>
-                                    <p className="text-xs text-[var(--text-muted)] mb-4">
-                                        Lista de lo registrado en el diario. Al cambiar el día (UTC) la lista se vacía sola.
-                                    </p>
-                                    {todayMeals.length === 0 ? (
-                                        <div className="text-center p-6 text-gray-400 border-2 border-dashed border-gray-200 rounded-xl text-sm">
-                                            Aún no hay comidas registradas hoy.
-                                        </div>
-                                    ) : (
-                                        <ul className="space-y-2 max-h-64 overflow-y-auto">
-                                            {todayMeals.map((row) => {
-                                                const kcal = Number(row.nutrition?.calorias_totales_kcal);
-                                                const title =
-                                                    String(row.nutrition?.nombre_platillo ?? "Comida").slice(0, 80) ||
-                                                    "Comida";
-                                                const selected = selectedTodayMealId === row.id;
-                                                return (
-                                                    <li key={row.id}>
-                                                        <button
-                                                            type="button"
-                                                            onClick={() =>
-                                                                setSelectedTodayMealId((prev) =>
-                                                                    prev === row.id ? null : row.id
-                                                                )
-                                                            }
-                                                            className={`w-full text-left p-4 rounded-2xl border transition-colors ${
-                                                                selected
-                                                                    ? "border-[var(--deep-green)] bg-[var(--bg-light)] ring-2 ring-[var(--light-green)]/40"
-                                                                    : "border-[var(--card-border)] bg-white hover:border-[var(--light-green)]"
-                                                            }`}
-                                                        >
-                                                            <div className="flex justify-between gap-2 items-start">
-                                                                <div className="min-w-0">
-                                                                    <p className="text-[10px] font-bold text-[var(--text-muted)] uppercase">
-                                                                        {formatLoggedAtLocal(row.logged_at)}
-                                                                    </p>
-                                                                    <p className="font-extrabold text-[var(--deep-green)] text-sm leading-snug line-clamp-2">
-                                                                        {title}
-                                                                    </p>
-                                                                </div>
-                                                                <span className="shrink-0 text-sm font-black text-[var(--deep-green)]">
-                                                                    {Number.isFinite(kcal) ? `${Math.round(kcal)}` : "—"}{" "}
-                                                                    <span className="text-[9px] font-bold text-[var(--text-muted)]">kcal</span>
-                                                                </span>
-                                                            </div>
-                                                        </button>
-                                                    </li>
-                                                );
-                                            })}
-                                        </ul>
-                                    )}
-                                </div>
-
                                 {/* ---> CAMBIO 4: Renderizado condicional de los Ingredientes */}
                                 <div className="rounded-3xl border border-[var(--card-border)] bg-white p-4 shadow-sm sm:p-6 lg:p-8">
                                     <div className="mb-6 flex flex-col gap-3 sm:mb-8 sm:flex-row sm:items-center sm:justify-between">
                                         <h3 className="flex items-center gap-2 text-lg font-extrabold sm:gap-3 sm:text-xl">
                                             <span className="material-symbols-outlined text-[var(--light-green)]">fact_check</span>
-                                            Detected Ingredients
+                                            Ingredientes detectados
                                         </h3>
                                         <button
                                             type="button"
                                             className="self-start border-b-2 border-[var(--light-green)] text-sm font-bold text-[var(--deep-green)] sm:self-auto"
                                         >
-                                            Edit All
+                                            Editar todo
                                         </button>
                                     </div>
                                     {displayMeal?.dishTitle ? (
@@ -703,7 +1063,7 @@ export const Body = () => {
                                                     <div className="flex items-center justify-between gap-3 border-t border-[var(--card-border)] pt-3 sm:flex-col sm:items-end sm:border-t-0 sm:pt-0 sm:text-right">
                                                         <p className="text-lg font-black">
                                                             {ingredient.calories}{" "}
-                                                            <span className="text-[10px] font-bold text-[var(--text-muted)]">KCAL</span>
+                                                            <span className="text-[10px] font-bold text-[var(--text-muted)]">kcal</span>
                                                         </p>
                                                         <span
                                                             className={`rounded px-2 py-1 text-[9px] font-bold uppercase text-white ${ingredient.tagColor}`}
@@ -716,9 +1076,7 @@ export const Body = () => {
                                         ) : (
                                             // Si no hay datos aún, mostramos un mensaje o un "placeholder"
                                             <div className="text-center p-8 text-gray-400 border-2 border-dashed border-gray-200 rounded-xl">
-                                                <p>
-                                                    Sube una imagen y analízala, o elige una comida en «Comidas de hoy» para ver el detalle.
-                                                </p>
+                                                <p>Sube una imagen y analízala para ver ingredientes y balance aquí.</p>
                                             </div>
                                         )}
                                     </div>
@@ -727,26 +1085,11 @@ export const Body = () => {
 
                             {/* Columna Derecha */}
                             <div className="space-y-6 sm:space-y-8 lg:col-span-5">
-                                {selectedTodayMealId ? (
-                                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-4 rounded-2xl border border-[var(--deep-green)]/30 bg-[var(--bg-light)]">
-                                        <p className="text-sm font-bold text-[var(--deep-green)]">
-                                            Viendo una comida ya registrada (día UTC).
-                                        </p>
-                                        <button
-                                            type="button"
-                                            onClick={() => setSelectedTodayMealId(null)}
-                                            className="shrink-0 px-4 py-2 rounded-xl border-2 border-[var(--deep-green)] text-[var(--deep-green)] text-sm font-bold hover:bg-[var(--deep-green)] hover:text-white transition-colors"
-                                        >
-                                            Volver al análisis actual
-                                        </button>
-                                    </div>
-                                ) : null}
-
                                 {/* ---> CAMBIO 5: Renderizado condicional de Macros */}
                                 <div className="flex flex-col items-center rounded-3xl border border-[var(--card-border)] bg-white p-4 shadow-sm sm:p-6 lg:p-10">
                                     <h3 className="mb-6 flex w-full items-center gap-2 self-start text-lg font-extrabold sm:mb-10 sm:gap-3 sm:text-xl">
                                         <span className="material-symbols-outlined text-[var(--light-green)]">donut_large</span>
-                                        Macro Balance
+                                        Balance de macronutrientes
                                     </h3>
 
                                     {displayMeal ? (
@@ -761,7 +1104,7 @@ export const Body = () => {
                                                         {displayMeal.totalCalories}
                                                     </span>
                                                     <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--text-muted)]">
-                                                        Total Calories
+                                                        Calorías totales
                                                     </span>
                                                 </div>
                                             </div>
@@ -769,7 +1112,7 @@ export const Body = () => {
                                                 <div className="text-center">
                                                     <div className="flex items-center justify-center gap-1.5 mb-2">
                                                         <div className="w-2.5 h-2.5 rounded-full bg-[var(--deep-green)]"></div>
-                                                        <span className="text-[10px] font-bold text-[var(--text-muted)] uppercase">Protein</span>
+                                                        <span className="text-[10px] font-bold uppercase text-[var(--text-muted)]">Proteína</span>
                                                     </div>
                                                     <p className="text-xl font-black">{displayMeal.macros.protein.percentage}%</p>
                                                     <p className="text-[11px] font-bold text-[var(--light-green)]">{displayMeal.macros.protein.grams}g</p>
@@ -777,7 +1120,7 @@ export const Body = () => {
                                                 <div className="text-center border-x border-[var(--card-border)]">
                                                     <div className="flex items-center justify-center gap-1.5 mb-2">
                                                         <div className="w-2.5 h-2.5 rounded-full bg-[var(--accent-blue)]"></div>
-                                                        <span className="text-[10px] font-bold text-[var(--text-muted)] uppercase">Carbs</span>
+                                                        <span className="text-[10px] font-bold uppercase text-[var(--text-muted)]">Carbohidratos</span>
                                                     </div>
                                                     <p className="text-xl font-black">{displayMeal.macros.carbs.percentage}%</p>
                                                     <p className="text-[11px] font-bold text-[var(--accent-blue)]">{displayMeal.macros.carbs.grams}g</p>
@@ -785,7 +1128,7 @@ export const Body = () => {
                                                 <div className="text-center">
                                                     <div className="flex items-center justify-center gap-1.5 mb-2">
                                                         <div className="w-2.5 h-2.5 rounded-full bg-[var(--accent-orange)]"></div>
-                                                        <span className="text-[10px] font-bold text-[var(--text-muted)] uppercase">Fats</span>
+                                                        <span className="text-[10px] font-bold uppercase text-[var(--text-muted)]">Grasas</span>
                                                     </div>
                                                     <p className="text-xl font-black">{displayMeal.macros.fats.percentage}%</p>
                                                     <p className="text-[11px] font-bold text-[var(--accent-orange)]">{displayMeal.macros.fats.grams}g</p>
@@ -794,7 +1137,7 @@ export const Body = () => {
                                         </>
                                     ) : (
                                         <div className="w-full py-20 text-center text-gray-400">
-                                            Esperando análisis...
+                                            Esperando análisis…
                                         </div>
                                     )}
                                 </div>
@@ -847,44 +1190,55 @@ export const Body = () => {
                                         {displayMeal.notes}
                                     </div>
                                 ) : null}
-
-                                <div className="flex flex-col gap-3 sm:flex-row sm:gap-4">
-                                    <button
-                                        type="button"
-                                        onClick={handleLogMeal}
-                                        disabled={
-                                            !!selectedTodayMealId ||
-                                            !pendingLogNutrition ||
-                                            mealAlreadyLogged ||
-                                            isLoggingMeal
-                                        }
-                                        className={`flex flex-1 items-center justify-center gap-3 rounded-2xl py-4 text-sm font-bold shadow-lg transition-all sm:py-5 sm:text-base
-                                            ${
-                                                !!selectedTodayMealId ||
-                                                !pendingLogNutrition ||
-                                                mealAlreadyLogged ||
-                                                isLoggingMeal
-                                                    ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                                                    : "bg-[var(--deep-green)] text-white hover:bg-[var(--light-green)]"
-                                            }`}
-                                    >
-                                        <span className="material-symbols-outlined">save</span>
-                                        {mealAlreadyLogged
-                                            ? "Registrado en el diario"
-                                            : isLoggingMeal
-                                              ? "Guardando…"
-                                              : "Registrar en el diario"}
-                                    </button>
-                                    <button
-                                        type="button"
-                                        className="flex h-14 items-center justify-center rounded-2xl border-2 border-[var(--card-border)] text-[var(--deep-green)] transition-colors hover:bg-[var(--bg-light)] sm:h-auto sm:w-20 sm:py-5"
-                                    >
-                                        <span className="material-symbols-outlined">share</span>
-                                    </button>
-                                </div>
                             </div>
                         </div>
+                        )}
                     </div>
+                    </div>
+
+                    {!showTodayMealsPanel ? (
+                    <div className="shrink-0 border-t border-[var(--card-border)] bg-white/95 px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-[0_-6px_24px_rgba(27,94,32,0.08)] backdrop-blur-md sm:px-6 lg:px-10">
+                        <div className="mx-auto flex max-w-7xl flex-col gap-3 sm:flex-row sm:items-stretch sm:gap-4">
+                            <button
+                                type="button"
+                                onClick={handleLogMeal}
+                                disabled={
+                                    !hayFotoComidaAnalizada ||
+                                    mealAlreadyLogged ||
+                                    isLoggingMeal
+                                }
+                                className={`flex flex-1 items-center justify-center gap-3 rounded-2xl py-4 text-sm font-bold shadow-lg transition-all sm:py-5 sm:text-base
+                                    ${
+                                        !hayFotoComidaAnalizada ||
+                                        mealAlreadyLogged ||
+                                        isLoggingMeal
+                                            ? "cursor-not-allowed bg-gray-200 text-gray-500"
+                                            : "bg-[var(--deep-green)] text-white hover:bg-[var(--light-green)]"
+                                    }`}
+                            >
+                                <span className="material-symbols-outlined">save</span>
+                                {mealAlreadyLogged
+                                    ? "Registrado en el diario"
+                                    : isLoggingMeal
+                                      ? "Guardando…"
+                                      : "Registrar en el diario"}
+                            </button>
+                            <button
+                                type="button"
+                                aria-label="Compartir análisis"
+                                onClick={() => void handleShareMeal()}
+                                disabled={!hayFotoComidaAnalizada}
+                                className={`flex h-14 shrink-0 items-center justify-center rounded-2xl border-2 py-0 sm:h-auto sm:w-24 sm:py-5 ${
+                                    hayFotoComidaAnalizada
+                                        ? "border-[var(--deep-green)] text-[var(--deep-green)] hover:bg-[var(--bg-light)]"
+                                        : "cursor-not-allowed border-gray-200 bg-gray-100 text-gray-400"
+                                }`}
+                            >
+                                <span className="material-symbols-outlined">share</span>
+                            </button>
+                        </div>
+                    </div>
+                    ) : null}
                 </main>
             </div>
 
@@ -931,8 +1285,8 @@ export const Body = () => {
                                     className="w-full h-3 bg-[var(--bg-light)] rounded-lg appearance-none cursor-pointer accent-[var(--deep-green)]"
                                 />
                                 <div className="flex justify-between text-xs font-bold text-[var(--text-muted)] mt-3">
-                                    <span>1200 min</span>
-                                    <span>4000 max</span>
+                                    <span>1200 mín.</span>
+                                    <span>4000 máx.</span>
                                 </div>
                             </div>
                         </div>
@@ -943,7 +1297,7 @@ export const Body = () => {
                             className={`w-full text-white font-bold py-4 rounded-xl transition-all shadow-lg flex justify-center items-center gap-2 
                             ${isSavingGoal ? 'bg-gray-400 cursor-not-allowed' : 'bg-[var(--deep-green)] hover:bg-[var(--light-green)]'}`}>
                             {isSavingGoal ? (
-                                <span>Guardando...</span>
+                                <span>Guardando…</span>
                             ) : (
                                 <>
                                     <span className="material-symbols-outlined text-[18px]">check_circle</span>
@@ -961,7 +1315,7 @@ export const Body = () => {
                         <div className="flex justify-between items-center mb-8">
                             <h2 className="text-2xl font-extrabold text-[var(--deep-green)] flex items-center gap-2">
                                 <span className="material-symbols-outlined">contact_phone</span>
-                                {activeClient.trim() ? "Cambiar cliente" : "Registrar Cliente"}
+                                {activeClient.trim() ? "Cambiar cliente" : "Registrar cliente"}
                             </h2>
                             <button
                                 type="button"
@@ -978,7 +1332,7 @@ export const Body = () => {
 
                         <div className="mb-8">
                             <label className="block text-sm font-bold text-[var(--deep-green)] mb-3">
-                                Número Telefónico
+                                Número de teléfono
                             </label>
 
                             <div className="flex items-center border-2 border-[var(--card-border)] rounded-xl overflow-hidden focus-within:border-[var(--deep-green)] transition-colors">
@@ -1003,7 +1357,7 @@ export const Body = () => {
                             <span className="material-symbols-outlined text-[18px]">
                                 {activeClient.trim() ? "save" : "add_circle"}
                             </span>
-                            {activeClient.trim() ? "Actualizar cliente" : "Agregar Cliente"}
+                            {activeClient.trim() ? "Actualizar cliente" : "Agregar cliente"}
                         </button>
                     </div>
                 </div>

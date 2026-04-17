@@ -1,15 +1,13 @@
 /** Clave por usuario (teléfono) para objetivo y progreso diario. */
 
+import { localCalendarDay } from "./browserDayContext";
+
 function objectiveStorageKey(phone: string): string {
     return `mentor-nutricional:objectiveKcal:${encodeURIComponent(phone.trim())}`;
 }
 
 function progressStorageKey(phone: string): string {
     return `mentor-nutricional:progressKcal:${encodeURIComponent(phone.trim())}`;
-}
-
-function utcCalendarDay(): string {
-    return new Date().toISOString().slice(0, 10);
 }
 
 export function readCachedObjectiveKcal(phone: string): number | null {
@@ -41,15 +39,24 @@ export function clearCachedObjectiveKcal(phone: string): void {
     }
 }
 
-type ProgressPayload = { consumed: number; dayUtc: string };
+type ProgressPayload = { consumed: number; calendarDay?: string; dayUtc?: string };
+
+function progressCalendarDay(row: ProgressPayload): string | null {
+    const c = row.calendarDay;
+    if (typeof c === "string" && /^\d{4}-\d{2}-\d{2}$/.test(c)) return c;
+    const legacy = row.dayUtc;
+    if (typeof legacy === "string" && /^\d{4}-\d{2}-\d{2}$/.test(legacy)) return legacy;
+    return null;
+}
 
 export function readCachedTodayProgress(phone: string): number {
     try {
         const raw = localStorage.getItem(progressStorageKey(phone));
         if (!raw) return 0;
         const row = JSON.parse(raw) as ProgressPayload;
-        if (!row || typeof row.dayUtc !== "string") return 0;
-        if (row.dayUtc !== utcCalendarDay()) return 0;
+        if (!row) return 0;
+        const d = progressCalendarDay(row);
+        if (!d || d !== localCalendarDay()) return 0;
         const n = Number(row.consumed);
         return Number.isFinite(n) && n >= 0 ? n : 0;
     } catch {
@@ -61,7 +68,7 @@ export function writeCachedTodayProgress(phone: string, consumed: number): void 
     try {
         const payload: ProgressPayload = {
             consumed: Math.max(0, consumed),
-            dayUtc: utcCalendarDay(),
+            calendarDay: localCalendarDay(),
         };
         localStorage.setItem(progressStorageKey(phone), JSON.stringify(payload));
     } catch {

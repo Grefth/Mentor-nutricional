@@ -156,7 +156,7 @@ export const Agente = () => {
         <div className="flex h-screen flex-col overflow-hidden antialiased lg:flex-row">
             <aside className="sidebar hidden h-full w-80 shrink-0 flex-col lg:flex">
                 <div className="p-6 pb-2">
-                    <h1 className="text-xl font-bold leading-tight text-[#111827]">Chatbot</h1>
+                    <h1 className="text-xl font-bold leading-tight text-[#111827]">Asistente de chat</h1>
                     <p className="mt-1 text-sm text-[var(--text-muted)]">Basado en tus datos</p>
                 </div>
                 <button
@@ -220,7 +220,7 @@ export const Agente = () => {
                                     <span className="material-symbols-outlined text-[#2E7D32]">smart_toy</span>
                                 </div>
                                 <div className="flex flex-col gap-1 items-start min-w-0">
-                                    <span className="text-xs text-[#6B7280] font-bold ml-1">Nutri-AI</span>
+                                    <span className="ml-1 text-xs font-bold text-[#6B7280]">Asistente</span>
                                     <div className="ai-message rounded-2xl rounded-tl-none p-3 text-sm leading-relaxed shadow-sm break-words sm:p-4 sm:text-base">
                                         <ChatMarkdown content={m.content} variant="assistant" />
                                     </div>
@@ -247,7 +247,7 @@ export const Agente = () => {
                                 <span className="material-symbols-outlined animate-pulse text-[#2E7D32]">smart_toy</span>
                             </div>
                             <div className="flex flex-col items-start gap-1">
-                                <span className="ml-1 text-xs font-bold text-[#6B7280]">Nutri-AI</span>
+                                <span className="ml-1 text-xs font-bold text-[#6B7280]">Asistente</span>
                                 <div className="ai-message rounded-2xl rounded-tl-none p-3 text-sm text-[#6B7280] shadow-sm sm:p-4">
                                     Pensando…
                                 </div>

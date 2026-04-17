@@ -35,6 +35,7 @@ function formatLoggedAtLocal(iso: string): string {
 export const Body = () => {
     const navigate = useNavigate();
 
+    const [mobileNavOpen, setMobileNavOpen] = useState(false);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [kcalValue, setKcalValue] = useState(2100);
     /** Suma de kcal del día según el API (consumos con timestamp UTC de hoy). */
@@ -343,55 +344,121 @@ export const Body = () => {
     return (
         <div className="min-h-screen">
             <div className="flex h-screen overflow-hidden">
-                {/* ... Sidebar y Header permanecen iguales ... */}
-                <aside className="w-72 flex flex-col border-r border-[var(--card-border)] bg-[var(--sidebar-bg)]">
-                    <div className="p-8 flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-[var(--deep-green)] flex items-center justify-center shadow-lg">
-                            <span className="material-symbols-outlined text-white">restaurant</span>
+                {mobileNavOpen ? (
+                    <button
+                        type="button"
+                        aria-label="Cerrar menú"
+                        className="fixed inset-0 z-30 bg-black/40 backdrop-blur-[1px] lg:hidden"
+                        onClick={() => setMobileNavOpen(false)}
+                    />
+                ) : null}
+                <aside
+                    className={`fixed inset-y-0 left-0 z-40 flex w-[min(18rem,88vw)] flex-col border-r border-[var(--card-border)] bg-[var(--sidebar-bg)] transition-transform duration-200 ease-out lg:static lg:z-auto lg:w-72 lg:max-w-none lg:translate-x-0 ${
+                        mobileNavOpen ? "translate-x-0" : "-translate-x-full"
+                    }`}
+                >
+                    <div className="flex items-center justify-between gap-2 p-5 sm:p-8 lg:pr-6">
+                        <div className="flex min-w-0 items-center gap-3">
+                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[var(--deep-green)] shadow-lg">
+                                <span className="material-symbols-outlined text-white">restaurant</span>
+                            </div>
+                            <h2 className="truncate text-xl font-extrabold tracking-tight text-[var(--deep-green)] sm:text-2xl">
+                                Mentor nutricional
+                            </h2>
                         </div>
-                        <h2 className="text-2xl font-extrabold tracking-tight text-[var(--deep-green)]">Mentor nutricional</h2>
+                        <button
+                            type="button"
+                            className="flex h-10 w-10 items-center justify-center rounded-full border border-[var(--card-border)] text-[var(--text-muted)] hover:bg-white lg:hidden"
+                            aria-label="Cerrar menú lateral"
+                            onClick={() => setMobileNavOpen(false)}
+                        >
+                            <span className="material-symbols-outlined text-[22px]">close</span>
+                        </button>
                     </div>
-                    <nav className="flex-1 px-6 space-y-2 mt-4">
-                        <a className={`${style.sidebarItemActive} flex items-center gap-4 px-4 py-3 rounded-xl font-bold transition-all`}
-                           href="#">
+                    <nav className="mt-2 flex-1 space-y-2 px-4 sm:px-6">
+                        <a
+                            className={`${style.sidebarItemActive} flex items-center gap-4 rounded-xl px-4 py-3 font-bold transition-all`}
+                            href="#"
+                            onClick={() => setMobileNavOpen(false)}
+                        >
                             <span className="material-symbols-outlined">grid_view</span>
                             Dashboard
                         </a>
 
-                        <button className="flex items-center gap-4 px-4 py-3 text-[var(--text-muted)] hover:bg-white/50 rounded-xl font-medium transition-all w-full text-left"
-                                onClick={() => {navigate('/agente')}} >
+                        <button
+                            type="button"
+                            className="flex w-full items-center gap-4 rounded-xl px-4 py-3 text-left font-medium text-[var(--text-muted)] transition-all hover:bg-white/50"
+                            onClick={() => {
+                                setMobileNavOpen(false);
+                                navigate("/agente");
+                            }}
+                        >
                             <span className="material-symbols-outlined">person</span>
                             Agente nutricional
                         </button>
                     </nav>
-                    <div className="p-6">
-                        <div className="bg-white p-4 rounded-2xl border border-[var(--card-border)] shadow-sm">
-                            <div className="flex items-center gap-3 mb-3">
-                                <div className="w-10 h-10 rounded-full bg-cover bg-center"
-                                     style={{ backgroundImage: "url('https://lh3.googleusercontent.com/aida-public/AB6AXuD02QcWR7IUOWs8xA9AXXYdXyTRB-HqgxQoFkaR4nQaT4SmaKXeATVLa6OOCAmLlO8egPC19e4UZFMI6L1MoQYdeGKyhIyWMf9U63rienxBTSB5Z9NRfN061qGbUKb2OCGqYiYHO2dQYdv92AeQqhCPc3oipNoStgHbRqWIr_IGt__X0gry4EeWAb6CbPRa3_39s2n6HWvo6B7KOuwyNIGdHwwi5EfyMoSukLIr3Z_y1LFIuCz-uAPnZnpDNsb6F-MNAKR65EZXU4OU')" }}></div>
-                                <div className="overflow-hidden">
-                                    <p className="text-sm font-bold truncate" title={activeClient}>
+                    <div className="p-4 sm:p-6">
+                        <div className="rounded-2xl border border-[var(--card-border)] bg-white p-4 shadow-sm">
+                            <div className="mb-3 flex items-center gap-3">
+                                <div
+                                    className="h-10 w-10 shrink-0 rounded-full bg-cover bg-center"
+                                    style={{
+                                        backgroundImage:
+                                            "url('https://lh3.googleusercontent.com/aida-public/AB6AXuD02QcWR7IUOWs8xA9AXXYdXyTRB-HqgxQoFkaR4nQaT4SmaKXeATVLa6OOCAmLlO8egPC19e4UZFMI6L1MoQYdeGKyhIyWMf9U63rienxBTSB5Z9NRfN061qGbUKb2OCGqYiYHO2dQYdv92AeQqhCPc3oipNoStgHbRqWIr_IGt__X0gry4EeWAb6CbPRa3_39s2n6HWvo6B7KOuwyNIGdHwwi5EfyMoSukLIr3Z_y1LFIuCz-uAPnZnpDNsb6F-MNAKR65EZXU4OU')",
+                                    }}
+                                />
+                                <div className="min-w-0 overflow-hidden">
+                                    <p className="truncate text-sm font-bold" title={activeClient}>
                                         {activeClient || "Sin Cliente"}
                                     </p>
-                                    <p className="text-[10px] uppercase font-bold text-[var(--light-green)]">Pro Client</p>
+                                    <p className="text-[10px] font-bold uppercase text-[var(--light-green)]">Pro Client</p>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </aside>
 
-                <main className="flex-1 overflow-y-auto relative">
-                    <header
-                        className="bg-white/80 backdrop-blur-md sticky top-0 z-20 px-10 py-6 border-b border-[var(--card-border)] flex justify-between items-center">
-                        <div>
-                            <h1 className="text-3xl font-extrabold text-[var(--deep-green)]">Meal Analyzer</h1>
-                            <p className="text-[var(--text-muted)] font-medium">Analyze your intake with professional accuracy</p>
+                <main className="relative min-w-0 flex-1 overflow-y-auto">
+                    <header className="sticky top-0 z-20 flex flex-col gap-4 border-b border-[var(--card-border)] bg-white/80 px-4 py-4 backdrop-blur-md sm:flex-row sm:items-center sm:justify-between sm:px-6 sm:py-5 lg:px-10 lg:py-6">
+                        <div className="flex min-w-0 items-start gap-3">
+                            <button
+                                type="button"
+                                className="mt-0.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-[var(--card-border)] text-[var(--deep-green)] hover:bg-[var(--bg-light)] lg:hidden"
+                                aria-label="Abrir menú"
+                                onClick={() => setMobileNavOpen(true)}
+                            >
+                                <span className="material-symbols-outlined text-[24px]">menu</span>
+                            </button>
+                            <div className="min-w-0">
+                                <h1 className="break-words text-2xl font-extrabold text-[var(--deep-green)] sm:text-3xl">
+                                    Meal Analyzer
+                                </h1>
+                                <p className="text-sm font-medium text-[var(--text-muted)] sm:text-base">
+                                    Analyze your intake with professional accuracy
+                                </p>
+                                <div className="mt-3 xl:hidden">
+                                    <p className="mb-1 text-[10px] font-bold uppercase tracking-widest text-[var(--text-muted)]">
+                                        Progreso hoy
+                                    </p>
+                                    <div className="flex flex-wrap items-center gap-2">
+                                        <span className="text-xs font-extrabold text-[var(--deep-green)] sm:text-sm">
+                                            {kcalConsumedDisplay} / {kcalGoalDisplay} kcal
+                                        </span>
+                                        <div className="h-2 min-w-[6rem] flex-1 max-w-[10rem] overflow-hidden rounded-full border border-[var(--card-border)] bg-[var(--bg-light)]">
+                                            <div
+                                                className="h-full bg-[var(--light-green)] transition-[width] duration-300 ease-out"
+                                                style={{ width: `${todayProgressPercent}%` }}
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
 
-                        <div className="flex items-center gap-6">
-                            <div className="flex items-center gap-3">
+                        <div className="flex flex-wrap items-center justify-end gap-2 sm:gap-4 lg:gap-6">
+                            <div className="flex flex-wrap items-center justify-end gap-2 sm:gap-3">
                                 {activeClient.trim() ? (
-                                    <div className="hidden sm:flex items-center gap-2">
+                                    <div className="flex flex-wrap items-center justify-end gap-2">
                                         <button
                                             type="button"
                                             onClick={openClientModal}
@@ -416,25 +483,27 @@ export const Body = () => {
                                     <button
                                         type="button"
                                         onClick={openClientModal}
-                                        className="hidden sm:flex items-center gap-2 bg-[var(--deep-green)] text-white px-4 py-2 rounded-lg font-semibold text-sm shadow-lg shadow-green-900/20 hover:bg-[var(--light-green)] transition-colors"
+                                        className="flex items-center gap-2 rounded-lg bg-[var(--deep-green)] px-3 py-2 text-xs font-semibold text-white shadow-lg shadow-green-900/20 transition-colors hover:bg-[var(--light-green)] sm:px-4 sm:text-sm"
                                     >
-                                        <span className="material-symbols-outlined text-[20px]">person_add</span>
+                                        <span className="material-symbols-outlined text-[18px] sm:text-[20px]">person_add</span>
                                         Agregar cliente
                                     </button>
                                 )}
 
                                 <button
+                                    type="button"
                                     onClick={() => {
                                         setLockKcalModal(false);
                                         setIsModalOpen(true);
                                     }}
-                                    className="hidden sm:flex items-center gap-2 bg-slate-900 dark:bg-blend-darken text-white px-4 py-2 rounded-lg font-semibold text-sm shadow-lg shadow-slate-200 dark:shadow-none hover:opacity-90 transition-opacity">
-                                    <span className="material-symbols-outlined text-[20px]">tune</span>
-                                    Meta Kcal
+                                    className="flex items-center gap-2 rounded-lg bg-slate-900 px-3 py-2 text-xs font-semibold text-white shadow-lg shadow-slate-200 transition-opacity hover:opacity-90 dark:bg-blend-darken dark:shadow-none sm:px-4 sm:text-sm"
+                                >
+                                    <span className="material-symbols-outlined text-[18px] sm:text-[20px]">tune</span>
+                                    <span className="hidden min-[380px]:inline">Meta Kcal</span>
                                 </button>
                             </div>
 
-                            <div className="text-right hidden xl:block border-l border-[var(--card-border)] pl-6">
+                            <div className="hidden border-l border-[var(--card-border)] pl-6 text-right xl:block">
                                 <p className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest mb-1">Today's Progress</p>
                                 <div className="flex items-center gap-3">
                                     <span className="text-sm font-extrabold text-[var(--deep-green)]">
@@ -448,18 +517,21 @@ export const Body = () => {
                                     </div>
                                 </div>
                             </div>
-                            <button className="w-12 h-12 flex items-center justify-center rounded-full bg-[var(--bg-light)] text-[var(--deep-green)] border border-[var(--card-border)] hover:bg-white transition-colors">
-                                <span className="material-symbols-outlined">notifications</span>
+                            <button
+                                type="button"
+                                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-[var(--card-border)] bg-[var(--bg-light)] text-[var(--deep-green)] transition-colors hover:bg-white sm:h-12 sm:w-12"
+                            >
+                                <span className="material-symbols-outlined text-[22px] sm:text-[24px]">notifications</span>
                             </button>
                         </div>
                     </header>
 
-                    <div className="p-10 max-w-7xl mx-auto space-y-10">
-                        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
+                    <div className="mx-auto max-w-7xl space-y-6 px-4 py-6 sm:space-y-8 sm:px-6 sm:py-8 lg:space-y-10 lg:p-10">
+                        <div className="grid grid-cols-1 gap-6 lg:grid-cols-12 lg:gap-10">
                             {/* Columna Izquierda */}
-                            <div className="lg:col-span-7 space-y-8">
+                            <div className="space-y-6 sm:space-y-8 lg:col-span-7">
 
-                                <div className="bg-white rounded-3xl p-10 shadow-sm border border-[var(--card-border)] relative">
+                                <div className="relative rounded-3xl border border-[var(--card-border)] bg-white p-4 shadow-sm sm:p-6 lg:p-10">
 
                                     <input
                                         type="file"
@@ -472,13 +544,15 @@ export const Body = () => {
                                     {!previewUrl ? (
                                         <div
                                             onClick={() => fileInputRef.current?.click()}
-                                            className="border-2 border-dashed border-[var(--light-green)] bg-[var(--bg-light)] rounded-2xl p-12 flex flex-col items-center justify-center text-center group cursor-pointer hover:bg-white transition-colors">
-                                            <div className="w-20 h-20 bg-white rounded-2xl flex items-center justify-center shadow-md mb-6 group-hover:scale-110 transition-transform">
-                                                <span className="material-symbols-outlined text-4xl text-[var(--deep-green)]">add_a_photo</span>
+                                            className="group flex cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed border-[var(--light-green)] bg-[var(--bg-light)] p-6 text-center transition-colors hover:bg-white sm:p-10 lg:p-12">
+                                            <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-white shadow-md transition-transform group-hover:scale-110 sm:mb-6 sm:h-20 sm:w-20">
+                                                <span className="material-symbols-outlined text-3xl text-[var(--deep-green)] sm:text-4xl">add_a_photo</span>
                                             </div>
-                                            <h3 className="text-xl font-extrabold mb-2">Upload Meal Image</h3>
-                                            <p className="text-[var(--text-muted)] max-w-xs mb-8">Take a photo of your plate to get instant nutritional facts and insights.</p>
-                                            <button className="bg-[var(--deep-green)] text-white px-10 py-4 rounded-2xl font-bold shadow-lg shadow-green-900/10 hover:bg-[var(--light-green)] transition-all pointer-events-none">
+                                            <h3 className="mb-2 text-lg font-extrabold sm:text-xl">Upload Meal Image</h3>
+                                            <p className="mb-6 max-w-xs text-sm text-[var(--text-muted)] sm:mb-8 sm:text-base">
+                                                Take a photo of your plate to get instant nutritional facts and insights.
+                                            </p>
+                                            <button className="pointer-events-none rounded-2xl bg-[var(--deep-green)] px-8 py-3 font-bold text-white shadow-lg shadow-green-900/10 transition-all hover:bg-[var(--light-green)] sm:px-10 sm:py-4">
                                                 Choose File
                                             </button>
                                         </div>
@@ -500,17 +574,21 @@ export const Body = () => {
                                                 </button>
                                             </div>
 
-                                            <div className="flex gap-4">
+                                            <div className="flex w-full max-w-md flex-col gap-3 sm:flex-row sm:justify-center sm:gap-4">
                                                 <button
+                                                    type="button"
                                                     onClick={() => fileInputRef.current?.click()}
-                                                    className="px-6 py-3 border-2 border-[var(--card-border)] text-gray-700 font-bold rounded-xl hover:bg-gray-50 transition-colors">
+                                                    className="rounded-xl border-2 border-[var(--card-border)] px-5 py-3 font-bold text-gray-700 transition-colors hover:bg-gray-50 sm:px-6"
+                                                >
                                                     Cambiar Foto
                                                 </button>
                                                 <button
+                                                    type="button"
                                                     onClick={handleUploadImage}
                                                     disabled={isUploadingImage}
-                                                    className={`px-8 py-3 text-white font-bold rounded-xl transition-all shadow-lg flex items-center gap-2
-                                                        ${isUploadingImage ? 'bg-gray-400 cursor-not-allowed' : 'bg-[var(--deep-green)] hover:bg-[var(--light-green)]'}`}>
+                                                    className={`flex items-center justify-center gap-2 rounded-xl px-6 py-3 font-bold text-white shadow-lg transition-all sm:px-8
+                                                        ${isUploadingImage ? 'bg-gray-400 cursor-not-allowed' : 'bg-[var(--deep-green)] hover:bg-[var(--light-green)]'}`}
+                                                >
                                                     {isUploadingImage ? 'Analizando...' : (
                                                         <>
                                                             <span className="material-symbols-outlined text-[18px]">auto_awesome</span>
@@ -523,9 +601,9 @@ export const Body = () => {
                                     )}
                                 </div>
 
-                                <div className="bg-white rounded-3xl p-8 shadow-sm border border-[var(--card-border)]">
-                                    <div className="flex justify-between items-center mb-4">
-                                        <h3 className="text-xl font-extrabold flex items-center gap-3 text-[var(--deep-green)]">
+                                <div className="rounded-3xl border border-[var(--card-border)] bg-white p-4 shadow-sm sm:p-6 lg:p-8">
+                                    <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                                        <h3 className="flex items-center gap-2 text-lg font-extrabold text-[var(--deep-green)] sm:gap-3 sm:text-xl">
                                             <span className="material-symbols-outlined text-[var(--light-green)]">restaurant_menu</span>
                                             Comidas de hoy
                                         </h3>
@@ -586,13 +664,16 @@ export const Body = () => {
                                 </div>
 
                                 {/* ---> CAMBIO 4: Renderizado condicional de los Ingredientes */}
-                                <div className="bg-white rounded-3xl p-8 shadow-sm border border-[var(--card-border)]">
-                                    <div className="flex justify-between items-center mb-8">
-                                        <h3 className="text-xl font-extrabold flex items-center gap-3">
+                                <div className="rounded-3xl border border-[var(--card-border)] bg-white p-4 shadow-sm sm:p-6 lg:p-8">
+                                    <div className="mb-6 flex flex-col gap-3 sm:mb-8 sm:flex-row sm:items-center sm:justify-between">
+                                        <h3 className="flex items-center gap-2 text-lg font-extrabold sm:gap-3 sm:text-xl">
                                             <span className="material-symbols-outlined text-[var(--light-green)]">fact_check</span>
                                             Detected Ingredients
                                         </h3>
-                                        <button type="button" className="text-[var(--deep-green)] font-bold text-sm border-b-2 border-[var(--light-green)]">
+                                        <button
+                                            type="button"
+                                            className="self-start border-b-2 border-[var(--light-green)] text-sm font-bold text-[var(--deep-green)] sm:self-auto"
+                                        >
                                             Edit All
                                         </button>
                                     </div>
@@ -605,20 +686,28 @@ export const Body = () => {
                                         {displayMeal ? (
                                             // Si tenemos datos de la API, iteramos sobre ellos
                                             displayMeal.ingredients.map((ingredient, index) => (
-                                                <div key={index} className="flex items-center justify-between p-5 bg-[var(--bg-light)] rounded-2xl border border-[var(--card-border)]">
-                                                    <div className="flex items-center gap-5">
-                                                        <div className="w-14 h-14 rounded-xl bg-[var(--card-border)] flex items-center justify-center shadow-sm">
+                                                <div
+                                                    key={index}
+                                                    className="flex flex-col gap-4 rounded-2xl border border-[var(--card-border)] bg-[var(--bg-light)] p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5"
+                                                >
+                                                    <div className="flex min-w-0 items-center gap-3 sm:gap-5">
+                                                        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[var(--card-border)] shadow-sm sm:h-14 sm:w-14">
                                                             {/* Ícono por defecto, podrías usar imágenes reales si la API las manda */}
                                                             <span className="material-symbols-outlined text-[var(--deep-green)]">restaurant_menu</span>
                                                         </div>
-                                                        <div>
+                                                        <div className="min-w-0">
                                                             <p className="font-extrabold text-[var(--deep-green)]">{ingredient.name}</p>
                                                             <p className="text-xs font-bold text-[var(--text-muted)]">{ingredient.portion}</p>
                                                         </div>
                                                     </div>
-                                                    <div className="text-right">
-                                                        <p className="text-lg font-black">{ingredient.calories} <span className="text-[10px] font-bold text-[var(--text-muted)]">KCAL</span></p>
-                                                        <span className={`px-2 py-1 text-white text-[9px] font-bold rounded uppercase ${ingredient.tagColor}`}>
+                                                    <div className="flex items-center justify-between gap-3 border-t border-[var(--card-border)] pt-3 sm:flex-col sm:items-end sm:border-t-0 sm:pt-0 sm:text-right">
+                                                        <p className="text-lg font-black">
+                                                            {ingredient.calories}{" "}
+                                                            <span className="text-[10px] font-bold text-[var(--text-muted)]">KCAL</span>
+                                                        </p>
+                                                        <span
+                                                            className={`rounded px-2 py-1 text-[9px] font-bold uppercase text-white ${ingredient.tagColor}`}
+                                                        >
                                                             {ingredient.tag}
                                                         </span>
                                                     </div>
@@ -637,7 +726,7 @@ export const Body = () => {
                             </div>
 
                             {/* Columna Derecha */}
-                            <div className="lg:col-span-5 space-y-8">
+                            <div className="space-y-6 sm:space-y-8 lg:col-span-5">
                                 {selectedTodayMealId ? (
                                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-4 rounded-2xl border border-[var(--deep-green)]/30 bg-[var(--bg-light)]">
                                         <p className="text-sm font-bold text-[var(--deep-green)]">
@@ -654,25 +743,29 @@ export const Body = () => {
                                 ) : null}
 
                                 {/* ---> CAMBIO 5: Renderizado condicional de Macros */}
-                                <div className="bg-white rounded-3xl p-10 shadow-sm border border-[var(--card-border)] flex flex-col items-center">
-                                    <h3 className="text-xl font-extrabold self-start mb-10 flex items-center gap-3">
+                                <div className="flex flex-col items-center rounded-3xl border border-[var(--card-border)] bg-white p-4 shadow-sm sm:p-6 lg:p-10">
+                                    <h3 className="mb-6 flex w-full items-center gap-2 self-start text-lg font-extrabold sm:mb-10 sm:gap-3 sm:text-xl">
                                         <span className="material-symbols-outlined text-[var(--light-green)]">donut_large</span>
                                         Macro Balance
                                     </h3>
 
                                     {displayMeal ? (
                                         <>
-                                            <div className="relative w-72 h-72 flex items-center justify-center mb-10">
+                                            <div className="relative mx-auto mb-6 flex aspect-square w-full max-w-[min(18rem,88vw)] items-center justify-center sm:mb-10 sm:max-w-[16rem] lg:max-w-[18rem]">
                                                 <div
-                                                    className="w-full h-full shadow-xl rounded-full"
+                                                    className="h-full w-full rounded-full shadow-xl"
                                                     style={{ background: displayMeal.donutConicGradient }}
                                                 />
-                                                <div className="absolute inset-6 bg-white rounded-full flex flex-col items-center justify-center shadow-inner">
-                                                    <span className="text-5xl font-black text-[var(--deep-green)]">{displayMeal.totalCalories}</span>
-                                                    <span className="text-[var(--text-muted)] text-[10px] font-bold uppercase tracking-[0.2em]">Total Calories</span>
+                                                <div className="absolute inset-[12%] flex flex-col items-center justify-center rounded-full bg-white shadow-inner sm:inset-6">
+                                                    <span className="text-4xl font-black text-[var(--deep-green)] sm:text-5xl">
+                                                        {displayMeal.totalCalories}
+                                                    </span>
+                                                    <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-[var(--text-muted)]">
+                                                        Total Calories
+                                                    </span>
                                                 </div>
                                             </div>
-                                            <div className="w-full grid grid-cols-3 gap-6">
+                                            <div className="grid w-full grid-cols-3 gap-3 sm:gap-6">
                                                 <div className="text-center">
                                                     <div className="flex items-center justify-center gap-1.5 mb-2">
                                                         <div className="w-2.5 h-2.5 rounded-full bg-[var(--deep-green)]"></div>
@@ -706,25 +799,25 @@ export const Body = () => {
                                     )}
                                 </div>
 
-                                <div className="grid grid-cols-2 gap-6">
-                                    <div className="bg-white p-6 rounded-3xl border border-[var(--card-border)]">
+                                <div className="grid grid-cols-2 gap-3 sm:gap-6">
+                                    <div className="rounded-3xl border border-[var(--card-border)] bg-white p-4 sm:p-6">
                                         <p className="text-[10px] font-bold text-[var(--text-muted)] uppercase mb-3">Fibra</p>
                                         <div className="flex items-center justify-between">
-                                            <span className="text-2xl font-black">{displayMeal ? `${displayMeal.fiber}g` : "--"}</span>
+                                            <span className="text-xl font-black sm:text-2xl">{displayMeal ? `${displayMeal.fiber}g` : "--"}</span>
                                             <span className="material-symbols-outlined text-[var(--light-green)]">trending_up</span>
                                         </div>
                                     </div>
-                                    <div className="bg-white p-6 rounded-3xl border border-[var(--card-border)]">
+                                    <div className="rounded-3xl border border-[var(--card-border)] bg-white p-4 sm:p-6">
                                         <p className="text-[10px] font-bold text-[var(--text-muted)] uppercase mb-3">Azúcar</p>
                                         <div className="flex items-center justify-between">
-                                            <span className="text-2xl font-black">{displayMeal ? `${displayMeal.sugar}g` : "--"}</span>
+                                            <span className="text-xl font-black sm:text-2xl">{displayMeal ? `${displayMeal.sugar}g` : "--"}</span>
                                             <span className="material-symbols-outlined text-[var(--accent-blue)]">cake</span>
                                         </div>
                                     </div>
                                 </div>
 
-                                <div className="bg-white rounded-3xl p-8 shadow-sm border border-[var(--card-border)]">
-                                    <h3 className="text-lg font-extrabold mb-6 flex items-center gap-2 text-[var(--deep-green)]">
+                                <div className="rounded-3xl border border-[var(--card-border)] bg-white p-4 shadow-sm sm:p-6 lg:p-8">
+                                    <h3 className="mb-4 flex items-center gap-2 text-base font-extrabold text-[var(--deep-green)] sm:mb-6 sm:text-lg">
                                         <span className="material-symbols-outlined text-[var(--light-green)]">science</span>
                                         Micronutrientes
                                     </h3>
@@ -755,7 +848,7 @@ export const Body = () => {
                                     </div>
                                 ) : null}
 
-                                <div className="flex gap-4">
+                                <div className="flex flex-col gap-3 sm:flex-row sm:gap-4">
                                     <button
                                         type="button"
                                         onClick={handleLogMeal}
@@ -765,7 +858,7 @@ export const Body = () => {
                                             mealAlreadyLogged ||
                                             isLoggingMeal
                                         }
-                                        className={`flex-1 font-bold py-5 rounded-2xl transition-all shadow-lg flex items-center justify-center gap-3
+                                        className={`flex flex-1 items-center justify-center gap-3 rounded-2xl py-4 text-sm font-bold shadow-lg transition-all sm:py-5 sm:text-base
                                             ${
                                                 !!selectedTodayMealId ||
                                                 !pendingLogNutrition ||
@@ -784,7 +877,7 @@ export const Body = () => {
                                     </button>
                                     <button
                                         type="button"
-                                        className="w-20 flex items-center justify-center border-2 border-[var(--card-border)] rounded-2xl text-[var(--deep-green)] hover:bg-[var(--bg-light)] transition-colors"
+                                        className="flex h-14 items-center justify-center rounded-2xl border-2 border-[var(--card-border)] text-[var(--deep-green)] transition-colors hover:bg-[var(--bg-light)] sm:h-auto sm:w-20 sm:py-5"
                                     >
                                         <span className="material-symbols-outlined">share</span>
                                     </button>
@@ -797,8 +890,8 @@ export const Body = () => {
 
             {/* ... Modales se mantienen iguales ... */}
             {isModalOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm transition-opacity">
-                    <div className="bg-white p-8 rounded-3xl shadow-2xl w-[450px] max-w-[90%] border border-[var(--card-border)] animate-fade-in-up">
+                <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-4 backdrop-blur-sm transition-opacity sm:items-center sm:p-6">
+                    <div className="max-h-[90dvh] w-full max-w-[450px] overflow-y-auto rounded-3xl border border-[var(--card-border)] bg-white p-5 shadow-2xl animate-fade-in-up sm:p-8">
                         <div className="flex justify-between items-center mb-8">
                             <h2 className="text-2xl font-extrabold text-[var(--deep-green)] flex items-center gap-2">
                                 <span className="material-symbols-outlined">tune</span>
@@ -822,7 +915,7 @@ export const Body = () => {
                                 Ajustar Calorías Diarias
                             </p>
                             <div className="flex items-end justify-center gap-2 mb-8">
-                                <span className="text-6xl font-black text-[var(--deep-green)] tracking-tighter">
+                                <span className="text-4xl font-black tracking-tighter text-[var(--deep-green)] sm:text-5xl md:text-6xl">
                                     {kcalValue}
                                 </span>
                                 <span className="text-lg font-bold text-[var(--light-green)] mb-2">kcal</span>
@@ -863,8 +956,8 @@ export const Body = () => {
             )}
 
             {isAddClientModalOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm transition-opacity">
-                    <div className="bg-white p-8 rounded-3xl shadow-2xl w-[400px] max-w-[90%] border border-[var(--card-border)] animate-fade-in-up">
+                <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-4 backdrop-blur-sm transition-opacity sm:items-center sm:p-6">
+                    <div className="max-h-[90dvh] w-full max-w-[400px] overflow-y-auto rounded-3xl border border-[var(--card-border)] bg-white p-5 shadow-2xl animate-fade-in-up sm:p-8">
                         <div className="flex justify-between items-center mb-8">
                             <h2 className="text-2xl font-extrabold text-[var(--deep-green)] flex items-center gap-2">
                                 <span className="material-symbols-outlined">contact_phone</span>

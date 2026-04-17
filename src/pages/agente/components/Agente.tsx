@@ -153,14 +153,14 @@ export const Agente = () => {
     };
 
     return (
-        <div className="antialiased overflow-hidden h-screen flex">
-            <aside className="sidebar w-80 flex flex-col h-full shrink-0">
+        <div className="flex h-screen flex-col overflow-hidden antialiased lg:flex-row">
+            <aside className="sidebar hidden h-full w-80 shrink-0 flex-col lg:flex">
                 <div className="p-6 pb-2">
-                    <h1 className="text-xl font-bold text-[#111827] leading-tight">Chatbot</h1>
-                    <p className="text-[var(--text-muted)] text-sm mt-1">Basado en tus datos</p>
+                    <h1 className="text-xl font-bold leading-tight text-[#111827]">Chatbot</h1>
+                    <p className="mt-1 text-sm text-[var(--text-muted)]">Basado en tus datos</p>
                 </div>
                 <button
-                    className="flex items-center gap-4 px-4 py-3 text-[var(--text-muted)] hover:bg-white/50 rounded-xl font-medium transition-all"
+                    className="flex items-center gap-4 rounded-xl px-4 py-3 font-medium text-[var(--text-muted)] transition-all hover:bg-white/50"
                     type="button"
                     onClick={() => navigate("/")}
                 >
@@ -169,27 +169,44 @@ export const Agente = () => {
                 </button>
             </aside>
 
-            <main className="flex-1 flex flex-col h-full relative min-w-0 bg-[#FFFFFF]">
-                <header className="shrink-0 p-6 pb-2 z-10">
-                    <div className="header-banner relative w-full h-40 rounded-2xl overflow-hidden shadow-md">
+            <main className="relative flex min-h-0 min-w-0 flex-1 flex-col bg-[#FFFFFF]">
+                <div className="flex shrink-0 items-center gap-3 border-b border-[var(--sidebar-border)] bg-[var(--sidebar-bg)] px-4 py-3 lg:hidden">
+                    <button
+                        type="button"
+                        onClick={() => navigate("/")}
+                        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-[var(--text-muted)] transition-colors hover:bg-white"
+                        aria-label="Regresar al inicio"
+                    >
+                        <span className="material-symbols-outlined">arrow_back</span>
+                    </button>
+                    <div className="min-w-0">
+                        <h1 className="truncate text-base font-bold text-[#111827]">Asistente nutricional</h1>
+                        <p className="truncate text-xs text-[var(--text-muted)]">Basado en tus datos</p>
+                    </div>
+                </div>
+
+                <header className="z-10 shrink-0 px-4 pb-2 pt-3 sm:p-6 sm:pb-2 sm:pt-4">
+                    <div className="header-banner relative h-28 w-full overflow-hidden rounded-2xl shadow-md sm:h-36 lg:h-40">
                         <div
-                            className="absolute inset-0 opacity-20 mix-blend-overlay bg-cover bg-center"
+                            className="absolute inset-0 bg-cover bg-center opacity-20 mix-blend-overlay"
                             style={{
                                 backgroundImage:
                                     "url('https://lh3.googleusercontent.com/aida-public/AB6AXuDSMFI0HYCHsImwmTUzwKs6NhvIKeJ4fEnc5CaSHUqygjlF2xMqbtOIQAoVXC_VY5o3fibXg4RtYhTAmb-hC3PjiLG6a5PpDI_0iC3N-uywYs4d4WUD6j9RENC2wz8j7bYLVx-JjnB_PPmHB2urXEDDItt3DQIL1w0T3bPSuKgg9-o4wkKanf9-0GiMUnG7UcPd6NSpVTozi4m_8lRX6aHQ4Z1M9V80Q1kiewt2PqlWiLpbGbaoiDe3cNAmf5Ki_zAG7rBynEMd1PPI')",
                             }}
                         />
-                        <div className="absolute bottom-0 left-0 p-6">
-                            <h2 className="text-white text-3xl font-bold tracking-tight mb-1">Asistente nutricional</h2>
-                            <p className="text-white/80 text-sm font-medium flex items-center gap-2">
-                                <span className="w-2 h-2 rounded-full bg-[#00C853]" />
+                        <div className="absolute bottom-0 left-0 p-4 sm:p-6">
+                            <h2 className="mb-1 text-xl font-bold tracking-tight text-white sm:text-2xl lg:text-3xl">
+                                Asistente nutricional
+                            </h2>
+                            <p className="flex items-center gap-2 text-xs font-medium text-white/80 sm:text-sm">
+                                <span className="h-2 w-2 shrink-0 rounded-full bg-[#00C853]" />
                                 Conectado a tu historial
                             </p>
                         </div>
                     </div>
                 </header>
 
-                <div className="flex-1 overflow-y-auto px-6 py-4 space-y-6" id="chat-container">
+                <div className="flex-1 space-y-4 overflow-y-auto px-3 py-3 sm:space-y-6 sm:px-6 sm:py-4" id="chat-container">
                     <div className="flex justify-center">
                         <span className="text-xs font-semibold text-[#9CA3AF] bg-[#F3F4F6] px-3 py-1 rounded-full uppercase tracking-wider">
                             Hoy
@@ -198,40 +215,40 @@ export const Agente = () => {
 
                     {messages.map((m) =>
                         m.role === "assistant" ? (
-                            <div key={m.id} className="flex items-start gap-3 max-w-3xl">
-                                <div className="w-9 h-9 rounded-full bg-[#F3F4F6] flex items-center justify-center shrink-0 border border-[var(--ai-bubble-border)]">
+                            <div key={m.id} className="flex max-w-3xl items-start gap-2 sm:gap-3">
+                                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-[var(--ai-bubble-border)] bg-[#F3F4F6] sm:h-9 sm:w-9">
                                     <span className="material-symbols-outlined text-[#2E7D32]">smart_toy</span>
                                 </div>
                                 <div className="flex flex-col gap-1 items-start min-w-0">
                                     <span className="text-xs text-[#6B7280] font-bold ml-1">Nutri-AI</span>
-                                    <div className="ai-message p-4 rounded-2xl rounded-tl-none shadow-sm leading-relaxed break-words">
+                                    <div className="ai-message rounded-2xl rounded-tl-none p-3 text-sm leading-relaxed shadow-sm break-words sm:p-4 sm:text-base">
                                         <ChatMarkdown content={m.content} variant="assistant" />
                                     </div>
                                 </div>
                             </div>
                         ) : (
-                            <div key={m.id} className="flex items-start gap-3 max-w-3xl ml-auto justify-end">
-                                <div className="flex flex-col gap-1 items-end min-w-0 max-w-[85%]">
-                                    <span className="text-xs text-[#6B7280] font-bold mr-1">Tú</span>
-                                    <div className="user-message p-4 rounded-2xl rounded-tr-none shadow-sm leading-relaxed break-words [&_p]:font-medium">
+                            <div key={m.id} className="ml-auto flex max-w-3xl justify-end gap-2 sm:gap-3">
+                                <div className="flex min-w-0 max-w-[min(92%,28rem)] flex-col items-end gap-1">
+                                    <span className="mr-1 text-xs font-bold text-[#6B7280]">Tú</span>
+                                    <div className="user-message rounded-2xl rounded-tr-none p-3 text-sm leading-relaxed shadow-sm break-words sm:p-4 sm:text-base [&_p]:font-medium">
                                         <ChatMarkdown content={m.content} variant="user" />
                                     </div>
                                 </div>
-                                <div className="w-9 h-9 rounded-full bg-[#E5E7EB] shrink-0 flex items-center justify-center border border-[var(--sidebar-border)]">
-                                    <span className="material-symbols-outlined text-[#4B5563] text-[22px]">person</span>
+                                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-[var(--sidebar-border)] bg-[#E5E7EB] sm:h-9 sm:w-9">
+                                    <span className="material-symbols-outlined text-[20px] text-[#4B5563] sm:text-[22px]">person</span>
                                 </div>
                             </div>
                         )
                     )}
 
                     {loading ? (
-                        <div className="flex items-start gap-3 max-w-3xl">
-                            <div className="w-9 h-9 rounded-full bg-[#F3F4F6] flex items-center justify-center shrink-0 border border-[var(--ai-bubble-border)]">
-                                <span className="material-symbols-outlined text-[#2E7D32] animate-pulse">smart_toy</span>
+                        <div className="flex max-w-3xl items-start gap-2 sm:gap-3">
+                            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-[var(--ai-bubble-border)] bg-[#F3F4F6] sm:h-9 sm:w-9">
+                                <span className="material-symbols-outlined animate-pulse text-[#2E7D32]">smart_toy</span>
                             </div>
-                            <div className="flex flex-col gap-1 items-start">
-                                <span className="text-xs text-[#6B7280] font-bold ml-1">Nutri-AI</span>
-                                <div className="ai-message p-4 rounded-2xl rounded-tl-none shadow-sm text-[#6B7280] text-sm">
+                            <div className="flex flex-col items-start gap-1">
+                                <span className="ml-1 text-xs font-bold text-[#6B7280]">Nutri-AI</span>
+                                <div className="ai-message rounded-2xl rounded-tl-none p-3 text-sm text-[#6B7280] shadow-sm sm:p-4">
                                     Pensando…
                                 </div>
                             </div>
@@ -241,17 +258,17 @@ export const Agente = () => {
                     <div ref={chatEndRef} />
                 </div>
 
-                <div className="p-6 pt-2">
-                    <div className="input-container rounded-xl shadow-sm flex items-end p-2 gap-2">
+                <div className="shrink-0 px-3 pb-3 pt-2 sm:p-6 sm:pt-2">
+                    <div className="input-container flex items-end gap-1 rounded-xl p-2 shadow-sm sm:gap-2">
                         <button
                             type="button"
-                            className="p-2.5 text-[#9CA3AF] hover:text-[#2E7D32] transition-colors rounded-lg hover:bg-[#F9FAFB] self-end mb-0.5"
+                            className="mb-0.5 self-end rounded-lg p-2 text-[#9CA3AF] transition-colors hover:bg-[#F9FAFB] hover:text-[#2E7D32] sm:p-2.5"
                             aria-label="Adjuntar (próximamente)"
                             disabled
                         >
                             <span className="material-symbols-outlined text-[24px]">add_circle</span>
                         </button>
-                        <div className="flex-1 py-2">
+                        <div className="min-w-0 flex-1 py-2">
                             <textarea
                                 ref={textareaRef}
                                 value={draft}
@@ -259,23 +276,23 @@ export const Agente = () => {
                                 onKeyDown={onKeyDown}
                                 disabled={loading}
                                 rows={1}
-                                className="w-full bg-transparent border-0 focus:ring-0 p-0 text-[#111827] placeholder-[#9CA3AF] resize-none max-h-32"
+                                className="max-h-32 w-full resize-none border-0 bg-transparent p-0 text-sm text-[#111827] placeholder-[#9CA3AF] focus:ring-0 sm:text-base"
                                 placeholder="Escribe tu pregunta sobre tu alimentación…"
                             />
                         </div>
-                        <div className="self-end mb-0.5">
+                        <div className="mb-0.5 self-end">
                             <button
                                 type="button"
                                 onClick={() => void sendMessage()}
                                 disabled={loading || !draft.trim()}
-                                className="send-button font-bold rounded-lg px-5 py-2.5 transition-opacity hover:opacity-90 flex items-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
+                                className="send-button flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-bold transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40 sm:gap-2 sm:px-5 sm:py-2.5 sm:text-base"
                             >
-                                <span>Enviar</span>
+                                <span className="hidden min-[360px]:inline">Enviar</span>
                                 <span className="material-symbols-outlined text-[18px]">send</span>
                             </button>
                         </div>
                     </div>
-                    <p className="text-center text-xs text-[#9CA3AF] mt-3">
+                    <p className="mt-2 text-center text-[11px] text-[#9CA3AF] sm:mt-3 sm:text-xs">
                         La IA puede equivocarse. Verifica información médica importante con tu nutricionista.
                     </p>
                 </div>

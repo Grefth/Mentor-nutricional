@@ -8,7 +8,7 @@ export default defineConfig(({ mode }) => {
   /** Proxy en dev para /api-health. Si Vercel no tiene rutas nuevas (p. ej. /meal/log), usa API local en `.env.local`: VITE_HEALTH_API_PROXY_TARGET=http://127.0.0.1:8000 */
   const healthProxyTarget =
     env.VITE_HEALTH_API_PROXY_TARGET ||
-    'http://0.0.0.0:8000'
+    'https://health-api-theta.vercel.app'
 
   return {
     plugins: [react(), tailwindcss()],

@@ -648,7 +648,7 @@ export const Body = () => {
                                             Analizador de comidas
                                         </h1>
                                         <p className="text-sm font-medium text-[var(--text-muted)] sm:text-base">
-                                            Analiza tu consumo con precisión profesional
+                                            Analiza tu consumo diario
                                         </p>
                                         <div className="mt-3 xl:hidden">
                                             <p className="mb-1 text-[10px] font-bold uppercase tracking-widest text-[var(--text-muted)]">

@@ -2,3 +2,22 @@
 @import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap');
 @import "tailwindcss";
 
+:root {
+    --deep-green: #2E7D32;
+    --light-green: #4CAF50;
+    --bg-light: #F1F8E9;
+    --accent-blue: #0288D1;
+    --accent-orange: #EF6C00;
+    --text-dark: #1B5E20;
+    --text-muted: #558B2F;
+    --white: #FFFFFF;
+    --card-border: #DCEDC8;
+    --sidebar-bg: #E8F5E9;
+}
+
+body {
+    font-family: 'Manrope', sans-serif;
+    margin: 0;
+    padding: 0;
+}
+

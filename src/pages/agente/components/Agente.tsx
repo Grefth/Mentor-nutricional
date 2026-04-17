@@ -93,7 +93,6 @@ export const Agente = () => {
 
         const phone = readActivePhone();
         if (!phone) {
-            alert("Configura primero el teléfono del cliente en el panel principal.");
             navigate("/");
             return;
         }

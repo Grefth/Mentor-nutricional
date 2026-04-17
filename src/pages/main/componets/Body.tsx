@@ -99,7 +99,6 @@ export const Body = () => {
             setLockKcalModal(true);
         } catch (error) {
             console.error("Error al cargar objetivo calórico:", error);
-            alert("No se pudo cargar la meta calórica desde el servidor.");
         }
     }, []);
 
@@ -188,7 +187,6 @@ export const Body = () => {
 
         const userId = activeClient.trim();
         if (!userId) {
-            alert("Selecciona o registra un cliente primero.");
             return;
         }
 
@@ -224,10 +222,8 @@ export const Body = () => {
             setPendingLogNutrition(nutrition);
             setNutritionData(apiNutritionToMealUi(nutrition));
             setMealAlreadyLogged(false);
-            alert("Análisis listo. Revisa los datos y pulsa «Registrar en diario» para sumar las calorías.");
         } catch (error) {
             console.error("Error al subir la imagen:", error);
-            alert("Hubo un problema al subir la imagen.");
         } finally {
             setIsUploadingImage(false);
         }
@@ -236,7 +232,6 @@ export const Body = () => {
     const handleLogMeal = async () => {
         const userId = activeClient.trim();
         if (!userId || !pendingLogNutrition) {
-            alert("Primero analiza una imagen de comida.");
             return;
         }
         if (mealAlreadyLogged) return;
@@ -257,10 +252,8 @@ export const Body = () => {
             setMealAlreadyLogged(true);
             void loadTodayCalories(userId);
             void loadTodayMeals(userId);
-            alert("Comida registrada en tu diario.");
         } catch (error) {
             console.error("Error al registrar comida:", error);
-            alert("No se pudo guardar en el diario. Inténtalo de nuevo.");
         } finally {
             setIsLoggingMeal(false);
         }

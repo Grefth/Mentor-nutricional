@@ -2,6 +2,8 @@
 @import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap');
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 :root {
     --deep-green: #2E7D32;
     --light-green: #4CAF50;
@@ -13,6 +15,43 @@
     --white: #FFFFFF;
     --card-border: #DCEDC8;
     --sidebar-bg: #E8F5E9;
+    /* Agente vars */
+    --sidebar-border: #E5E7EB;
+    --ai-bubble-bg: #FFFFFF;
+    --ai-bubble-border: #E5E7EB;
+    --main-bg: #FFFFFF;
+    --input-border: #E5E7EB;
+    --header-gradient-start: #0F172A;
+    --header-gradient-end: #1E293B;
+    --button-bg: #00C853;
+    --user-bubble-bg: #00C853;
+    --user-bubble-text: #FFFFFF;
+}
+
+html.dark {
+    --deep-green: #81C784;
+    --light-green: #66BB6A;
+    --bg-light: #1a2820;
+    --accent-blue: #4FC3F7;
+    --accent-orange: #FFB74D;
+    --text-dark: #E8F5E9;
+    --text-muted: #9CA3AF;
+    --white: #1E2A1E;
+    --card-border: #2d4a30;
+    --sidebar-bg: #162316;
+    /* Agente vars */
+    --sidebar-border: #2d3b2d;
+    --ai-bubble-bg: #1e2a1e;
+    --ai-bubble-border: #2d3b2d;
+    --main-bg: #111a11;
+    --input-border: #2d3b2d;
+    --header-gradient-start: #0a1a0a;
+    --header-gradient-end: #0f2210;
+}
+
+html.dark body {
+    background-color: #111a11;
+    color: #E8F5E9;
 }
 
 body {

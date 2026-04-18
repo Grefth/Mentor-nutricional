@@ -15,6 +15,9 @@ body {
     background-color: var(--bg-light);
     color: var(--text-dark);
 }
+:global(html.dark) body {
+    background-color: #111a11;
+}
 .sidebar-item-active {
     background-color: var(--white);
     color: var(--deep-green);

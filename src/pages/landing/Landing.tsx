@@ -1,11 +1,15 @@
 import { useNavigate } from "react-router-dom";
 import style from './Landing.module.css';
+import { ThemeToggle } from "../../components/ThemeToggle";
 
 export function Landing() {
     const navigate = useNavigate();
 
     return (
         <div className={style.container}>
+            <div className="flex justify-end px-6 pt-5">
+                <ThemeToggle className="h-10 w-10" />
+            </div>
             <div className={style.hero}>
                 <div className={style.heroContent}>
                     <div className={style.badge}>

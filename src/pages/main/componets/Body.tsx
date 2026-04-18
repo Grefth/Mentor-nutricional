@@ -1,5 +1,6 @@
 import style from './Body.module.css';
 import { useNavigate } from "react-router-dom";
+import { ThemeToggle } from "../../../components/ThemeToggle";
 import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { readActivePhone, writeActivePhone } from "../../../lib/activeUserStorage";
 import {
@@ -604,8 +605,8 @@ export const Body = () => {
                         </button>
                     </nav>
                     <div className="p-4 sm:p-6">
-                        <div className="rounded-2xl border border-[var(--card-border)] bg-white p-4 shadow-sm">
-                            <div className="mb-3 flex items-center gap-3">
+                        <div className="rounded-2xl border border-[var(--card-border)] bg-[var(--white)] p-4 shadow-sm">
+                            <div className="flex items-center gap-3">
                                 <div
                                     className="h-10 w-10 shrink-0 rounded-full bg-cover bg-center"
                                     style={{
@@ -613,12 +614,13 @@ export const Body = () => {
                                             "url('https://lh3.googleusercontent.com/aida-public/AB6AXuD02QcWR7IUOWs8xA9AXXYdXyTRB-HqgxQoFkaR4nQaT4SmaKXeATVLa6OOCAmLlO8egPC19e4UZFMI6L1MoQYdeGKyhIyWMf9U63rienxBTSB5Z9NRfN061qGbUKb2OCGqYiYHO2dQYdv92AeQqhCPc3oipNoStgHbRqWIr_IGt__X0gry4EeWAb6CbPRa3_39s2n6HWvo6B7KOuwyNIGdHwwi5EfyMoSukLIr3Z_y1LFIuCz-uAPnZnpDNsb6F-MNAKR65EZXU4OU')",
                                     }}
                                 />
-                                <div className="min-w-0 overflow-hidden">
+                                <div className="min-w-0 flex-1 overflow-hidden">
                                     <p className="truncate text-sm font-bold" title={activeClient}>
                                         {activeClient || "Sin cliente"}
                                     </p>
                                     <p className="text-[10px] font-bold uppercase text-[var(--light-green)]">Cliente Pro</p>
                                 </div>
+                                <ThemeToggle className="h-9 w-9 shrink-0" />
                             </div>
                         </div>
                     </div>
@@ -626,7 +628,7 @@ export const Body = () => {
 
                 <main className="relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
                     <header
-                        className={`sticky top-0 z-20 flex shrink-0 flex-col border-b border-[var(--card-border)] bg-white/80 backdrop-blur-md sm:px-6 lg:px-10 ${
+                        className={`sticky top-0 z-20 flex shrink-0 flex-col border-b border-[var(--card-border)] bg-[var(--white)]/80 backdrop-blur-md sm:px-6 lg:px-10 ${
                             showTodayMealsPanel
                                 ? "gap-3 px-4 py-3"
                                 : "gap-4 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:py-5 lg:py-6"
@@ -872,7 +874,7 @@ export const Body = () => {
                         {showTodayMealsPanel ? (
                             <div id="today-meals-panel" className="space-y-6 sm:space-y-8">
                                 {!selectedTodayMealId ? (
-                                    <div className="rounded-3xl border border-[var(--card-border)] bg-white p-4 shadow-sm sm:p-6 lg:p-8">
+                                    <div className="rounded-3xl border border-[var(--card-border)] bg-[var(--white)] p-4 shadow-sm sm:p-6 lg:p-8">
                                         <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                                             <h2 className="flex items-center gap-2 text-xl font-extrabold text-[var(--deep-green)] sm:text-2xl">
                                                 <span className="material-symbols-outlined text-[var(--light-green)]">restaurant_menu</span>
@@ -887,7 +889,7 @@ export const Body = () => {
                                             actualiza sola.
                                         </p>
                                         {todayMeals.length === 0 ? (
-                                            <div className="rounded-xl border-2 border-dashed border-gray-200 p-8 text-center text-sm text-gray-400">
+                                            <div className="rounded-xl border-2 border-dashed border-[var(--card-border)] p-8 text-center text-sm text-[var(--text-muted)]">
                                                 No hay comidas registradas hoy.
                                             </div>
                                         ) : (
@@ -901,7 +903,7 @@ export const Body = () => {
                                                             <button
                                                                 type="button"
                                                                 onClick={() => setSelectedTodayMealId(row.id)}
-                                                                className="w-full rounded-2xl border border-[var(--card-border)] bg-white p-4 text-left transition-colors hover:border-[var(--light-green)]"
+                                                                className="w-full rounded-2xl border border-[var(--card-border)] bg-[var(--white)] p-4 text-left transition-colors hover:border-[var(--light-green)]"
                                                             >
                                                                 <div className="flex items-start justify-between gap-2">
                                                                     <div className="min-w-0">
@@ -933,7 +935,7 @@ export const Body = () => {
                                         onBack={() => setSelectedTodayMealId(null)}
                                     />
                                 ) : (
-                                    <div className="rounded-3xl border border-[var(--card-border)] bg-white p-6 shadow-sm">
+                                    <div className="rounded-3xl border border-[var(--card-border)] bg-[var(--white)] p-6 shadow-sm">
                                         <button
                                             type="button"
                                             onClick={() => setSelectedTodayMealId(null)}
@@ -953,7 +955,7 @@ export const Body = () => {
                             {/* Columna Izquierda */}
                             <div className="space-y-6 sm:space-y-8 lg:col-span-7">
 
-                                <div className="relative rounded-3xl border border-[var(--card-border)] bg-white p-4 shadow-sm sm:p-6 lg:p-10">
+                                <div className="relative rounded-3xl border border-[var(--card-border)] bg-[var(--white)] p-4 shadow-sm sm:p-6 lg:p-10">
 
                                     <input
                                         type="file"
@@ -966,7 +968,7 @@ export const Body = () => {
                                     {!previewUrl ? (
                                         <div
                                             onClick={() => fileInputRef.current?.click()}
-                                            className="group flex cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed border-[var(--light-green)] bg-[var(--bg-light)] p-6 text-center transition-colors hover:bg-white sm:p-10 lg:p-12">
+                                            className="group flex cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed border-[var(--light-green)] bg-[var(--bg-light)] p-6 text-center transition-colors hover:bg-[var(--white)] sm:p-10 lg:p-12">
                                             <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-white shadow-md transition-transform group-hover:scale-110 sm:mb-6 sm:h-20 sm:w-20">
                                                 <span className="material-symbols-outlined text-3xl text-[var(--deep-green)] sm:text-4xl">add_a_photo</span>
                                             </div>
@@ -1000,7 +1002,7 @@ export const Body = () => {
                                                 <button
                                                     type="button"
                                                     onClick={() => fileInputRef.current?.click()}
-                                                    className="rounded-xl border-2 border-[var(--card-border)] px-5 py-3 font-bold text-gray-700 transition-colors hover:bg-gray-50 sm:px-6"
+                                                    className="rounded-xl border-2 border-[var(--card-border)] px-5 py-3 font-bold text-[var(--text-muted)] transition-colors hover:bg-[var(--bg-light)] sm:px-6"
                                                 >
                                                     Cambiar Foto
                                                 </button>
@@ -1024,7 +1026,7 @@ export const Body = () => {
                                 </div>
 
                                 {/* ---> CAMBIO 4: Renderizado condicional de los Ingredientes */}
-                                <div className="rounded-3xl border border-[var(--card-border)] bg-white p-4 shadow-sm sm:p-6 lg:p-8">
+                                <div className="rounded-3xl border border-[var(--card-border)] bg-[var(--white)] p-4 shadow-sm sm:p-6 lg:p-8">
                                     <div className="mb-6 flex flex-col gap-3 sm:mb-8 sm:flex-row sm:items-center sm:justify-between">
                                         <h3 className="flex items-center gap-2 text-lg font-extrabold sm:gap-3 sm:text-xl">
                                             <span className="material-symbols-outlined text-[var(--light-green)]">fact_check</span>
@@ -1086,7 +1088,7 @@ export const Body = () => {
                             {/* Columna Derecha */}
                             <div className="space-y-6 sm:space-y-8 lg:col-span-5">
                                 {/* ---> CAMBIO 5: Renderizado condicional de Macros */}
-                                <div className="flex flex-col items-center rounded-3xl border border-[var(--card-border)] bg-white p-4 shadow-sm sm:p-6 lg:p-10">
+                                <div className="flex flex-col items-center rounded-3xl border border-[var(--card-border)] bg-[var(--white)] p-4 shadow-sm sm:p-6 lg:p-10">
                                     <h3 className="mb-6 flex w-full items-center gap-2 self-start text-lg font-extrabold sm:mb-10 sm:gap-3 sm:text-xl">
                                         <span className="material-symbols-outlined text-[var(--light-green)]">donut_large</span>
                                         Balance de macronutrientes
@@ -1099,7 +1101,7 @@ export const Body = () => {
                                                     className="h-full w-full rounded-full shadow-xl"
                                                     style={{ background: displayMeal.donutConicGradient }}
                                                 />
-                                                <div className="absolute inset-[12%] flex flex-col items-center justify-center rounded-full bg-white shadow-inner sm:inset-6">
+                                                <div className="absolute inset-[12%] flex flex-col items-center justify-center rounded-full bg-[var(--white)] shadow-inner sm:inset-6">
                                                     <span className="text-4xl font-black text-[var(--deep-green)] sm:text-5xl">
                                                         {displayMeal.totalCalories}
                                                     </span>
@@ -1136,21 +1138,21 @@ export const Body = () => {
                                             </div>
                                         </>
                                     ) : (
-                                        <div className="w-full py-20 text-center text-gray-400">
+                                        <div className="w-full py-20 text-center text-[var(--text-muted)]">
                                             Esperando análisis…
                                         </div>
                                     )}
                                 </div>
 
                                 <div className="grid grid-cols-2 gap-3 sm:gap-6">
-                                    <div className="rounded-3xl border border-[var(--card-border)] bg-white p-4 sm:p-6">
+                                    <div className="rounded-3xl border border-[var(--card-border)] bg-[var(--white)] p-4 sm:p-6">
                                         <p className="text-[10px] font-bold text-[var(--text-muted)] uppercase mb-3">Fibra</p>
                                         <div className="flex items-center justify-between">
                                             <span className="text-xl font-black sm:text-2xl">{displayMeal ? `${displayMeal.fiber}g` : "--"}</span>
                                             <span className="material-symbols-outlined text-[var(--light-green)]">trending_up</span>
                                         </div>
                                     </div>
-                                    <div className="rounded-3xl border border-[var(--card-border)] bg-white p-4 sm:p-6">
+                                    <div className="rounded-3xl border border-[var(--card-border)] bg-[var(--white)] p-4 sm:p-6">
                                         <p className="text-[10px] font-bold text-[var(--text-muted)] uppercase mb-3">Azúcar</p>
                                         <div className="flex items-center justify-between">
                                             <span className="text-xl font-black sm:text-2xl">{displayMeal ? `${displayMeal.sugar}g` : "--"}</span>
@@ -1159,7 +1161,7 @@ export const Body = () => {
                                     </div>
                                 </div>
 
-                                <div className="rounded-3xl border border-[var(--card-border)] bg-white p-4 shadow-sm sm:p-6 lg:p-8">
+                                <div className="rounded-3xl border border-[var(--card-border)] bg-[var(--white)] p-4 shadow-sm sm:p-6 lg:p-8">
                                     <h3 className="mb-4 flex items-center gap-2 text-base font-extrabold text-[var(--deep-green)] sm:mb-6 sm:text-lg">
                                         <span className="material-symbols-outlined text-[var(--light-green)]">science</span>
                                         Micronutrientes
@@ -1180,12 +1182,12 @@ export const Body = () => {
                                             ))}
                                         </div>
                                     ) : (
-                                        <p className="text-center text-gray-400 py-4">Esperando análisis…</p>
+                                        <p className="py-4 text-center text-[var(--text-muted)]">Esperando análisis…</p>
                                     )}
                                 </div>
 
                                 {displayMeal?.notes ? (
-                                    <div className="bg-amber-50 border border-amber-200 rounded-2xl p-5 text-sm text-amber-950 leading-relaxed">
+                                    <div className="rounded-2xl border border-amber-200 bg-amber-50 p-5 text-sm leading-relaxed text-amber-950 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-200">
                                         <p className="text-[10px] font-bold uppercase text-amber-800 mb-2 tracking-wide">Notas</p>
                                         {displayMeal.notes}
                                     </div>
@@ -1197,7 +1199,7 @@ export const Body = () => {
                     </div>
 
                     {!showTodayMealsPanel ? (
-                    <div className="shrink-0 border-t border-[var(--card-border)] bg-white/95 px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-[0_-6px_24px_rgba(27,94,32,0.08)] backdrop-blur-md sm:px-6 lg:px-10">
+                    <div className="shrink-0 border-t border-[var(--card-border)] bg-[var(--white)]/95 px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-[0_-6px_24px_rgba(27,94,32,0.08)] backdrop-blur-md sm:px-6 lg:px-10">
                         <div className="mx-auto flex max-w-7xl flex-col gap-3 sm:flex-row sm:items-stretch sm:gap-4">
                             <button
                                 type="button"
@@ -1245,7 +1247,7 @@ export const Body = () => {
             {/* ... Modales se mantienen iguales ... */}
             {isModalOpen && (
                 <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-4 backdrop-blur-sm transition-opacity sm:items-center sm:p-6">
-                    <div className="max-h-[90dvh] w-full max-w-[450px] overflow-y-auto rounded-3xl border border-[var(--card-border)] bg-white p-5 shadow-2xl animate-fade-in-up sm:p-8">
+                    <div className="max-h-[90dvh] w-full max-w-[450px] overflow-y-auto rounded-3xl border border-[var(--card-border)] bg-[var(--white)] p-5 shadow-2xl animate-fade-in-up sm:p-8">
                         <div className="flex justify-between items-center mb-8">
                             <h2 className="text-2xl font-extrabold text-[var(--deep-green)] flex items-center gap-2">
                                 <span className="material-symbols-outlined">tune</span>
@@ -1311,7 +1313,7 @@ export const Body = () => {
 
             {isAddClientModalOpen && (
                 <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-4 backdrop-blur-sm transition-opacity sm:items-center sm:p-6">
-                    <div className="max-h-[90dvh] w-full max-w-[400px] overflow-y-auto rounded-3xl border border-[var(--card-border)] bg-white p-5 shadow-2xl animate-fade-in-up sm:p-8">
+                    <div className="max-h-[90dvh] w-full max-w-[400px] overflow-y-auto rounded-3xl border border-[var(--card-border)] bg-[var(--white)] p-5 shadow-2xl animate-fade-in-up sm:p-8">
                         <div className="flex justify-between items-center mb-8">
                             <h2 className="text-2xl font-extrabold text-[var(--deep-green)] flex items-center gap-2">
                                 <span className="material-symbols-outlined">contact_phone</span>
@@ -1344,7 +1346,7 @@ export const Body = () => {
                                     placeholder="Ej: +52 55 1234 5678"
                                     value={phoneNumberInput}
                                     onChange={(e) => setPhoneNumberInput(e.target.value)}
-                                    className="w-full px-4 py-3 outline-none text-gray-700 font-medium bg-transparent"
+                                    className="w-full bg-transparent px-4 py-3 font-medium text-[var(--text-dark)] outline-none"
                                 />
                             </div>
 

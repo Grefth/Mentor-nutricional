@@ -656,9 +656,9 @@ export const Body = () => {
                                 <span className="material-symbols-outlined text-[22px]">menu</span>
                             </button>
                             <div className="min-w-0 flex-1">
-                                {/* Título: se oculta al hacer scroll (solo en vista panel) */}
+                                {/* Título: se oculta al hacer scroll o en vista lista */}
                                 <div className={`overflow-hidden transition-all duration-300 ease-in-out ${
-                                    scrolled && !showTodayMealsPanel ? "max-h-0 opacity-0" : "max-h-24 opacity-100"
+                                    (scrolled || showTodayMealsPanel) ? "max-h-0 opacity-0" : "max-h-24 opacity-100"
                                 }`}>
                                     <h1 className="truncate text-xl font-extrabold text-[var(--deep-green)] sm:text-2xl">
                                         {showTodayMealsPanel ? "Comidas de hoy" : "Analizador de comidas"}
@@ -669,9 +669,9 @@ export const Body = () => {
                                         </p>
                                     )}
                                 </div>
-                                {/* Kcal compacto: aparece al hacer scroll en vista panel */}
+                                {/* Kcal compacto: aparece al hacer scroll en panel, o siempre en vista lista */}
                                 <div className={`overflow-hidden transition-all duration-300 ease-in-out ${
-                                    scrolled && !showTodayMealsPanel ? "max-h-10 opacity-100" : "max-h-0 opacity-0"
+                                    (showTodayMealsPanel || scrolled) ? "max-h-10 opacity-100" : "max-h-0 opacity-0"
                                 }`}>
                                     <div className="flex items-center gap-2">
                                         <span className="material-symbols-outlined text-[14px] text-[var(--deep-green)]">restaurant</span>

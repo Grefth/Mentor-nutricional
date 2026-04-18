@@ -190,6 +190,7 @@ export const Body = () => {
     const navigate = useNavigate();
 
     const [mobileNavOpen, setMobileNavOpen] = useState(false);
+    const [scrolled, setScrolled] = useState(false);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [kcalValue, setKcalValue] = useState(2100);
     /** Suma de kcal del día según el API (día civil local del navegador). */
@@ -543,6 +544,10 @@ export const Body = () => {
         [previewUrl, pendingLogNutrition, selectedTodayMealId]
     );
 
+    const handleMainScroll = useCallback((e: React.UIEvent<HTMLDivElement>) => {
+        setScrolled(e.currentTarget.scrollTop > 48);
+    }, []);
+
     const kcalConsumedDisplay = new Intl.NumberFormat("es-MX").format(Math.round(consumedTodayKcal));
     const kcalGoalDisplay = new Intl.NumberFormat("es-MX").format(kcalValue);
     const todayProgressPercent =
@@ -628,15 +633,17 @@ export const Body = () => {
 
                 <main className="relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
                     <header
-                        className={`sticky top-0 z-20 flex shrink-0 flex-col border-b border-[var(--card-border)] bg-[var(--white)]/80 backdrop-blur-md sm:px-6 lg:px-10 ${
+                        className={`sticky top-0 z-20 flex shrink-0 flex-col border-b border-[var(--card-border)] bg-[var(--white)]/90 backdrop-blur-md transition-all duration-300 ease-in-out sm:px-6 lg:px-10 ${
                             showTodayMealsPanel
                                 ? "gap-3 px-4 py-3"
+                                : scrolled
+                                ? "gap-2 px-4 py-2 sm:flex-row sm:items-center sm:justify-between sm:py-2"
                                 : "gap-4 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:py-5 lg:py-6"
                         }`}
                     >
                         {!showTodayMealsPanel ? (
                             <>
-                                <div className="flex min-w-0 items-start gap-3">
+                                <div className="flex min-w-0 items-center gap-3">
                                     <button
                                         type="button"
                                         className="mt-0.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-[var(--card-border)] text-[var(--deep-green)] hover:bg-[var(--bg-light)] lg:hidden"
@@ -645,26 +652,59 @@ export const Body = () => {
                                     >
                                         <span className="material-symbols-outlined text-[24px]">menu</span>
                                     </button>
-                                    <div className="min-w-0">
-                                        <h1 className="break-words text-2xl font-extrabold text-[var(--deep-green)] sm:text-3xl">
-                                            Analizador de comidas
-                                        </h1>
-                                        <p className="text-sm font-medium text-[var(--text-muted)] sm:text-base">
-                                            Analiza tu consumo diario
-                                        </p>
-                                        <div className="mt-3 xl:hidden">
-                                            <p className="mb-1 text-[10px] font-bold uppercase tracking-widest text-[var(--text-muted)]">
-                                                Progreso hoy
+                                    <div className="min-w-0 flex-1">
+                                        {/* Título animado: se oculta al hacer scroll */}
+                                        <div
+                                            className={`overflow-hidden transition-all duration-300 ease-in-out ${
+                                                scrolled ? 'max-h-0 opacity-0' : 'max-h-32 opacity-100'
+                                            }`}
+                                        >
+                                            <h1 className="break-words text-2xl font-extrabold text-[var(--deep-green)] sm:text-3xl">
+                                                Analizador de comidas
+                                            </h1>
+                                            <p className="text-sm font-medium text-[var(--text-muted)] sm:text-base">
+                                                Analiza tu consumo diario
                                             </p>
-                                            <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:gap-2">
-                                                <span className="shrink-0 text-xs font-extrabold text-[var(--deep-green)] sm:text-sm">
+                                        </div>
+                                        {/* Progreso compacto: visible solo al hacer scroll */}
+                                        <div
+                                            className={`overflow-hidden transition-all duration-300 ease-in-out ${
+                                                scrolled ? 'max-h-10 opacity-100' : 'max-h-0 opacity-0'
+                                            }`}
+                                        >
+                                            <div className="flex items-center gap-2">
+                                                <span className="material-symbols-outlined text-[16px] text-[var(--deep-green)]">restaurant</span>
+                                                <span className="text-xs font-extrabold text-[var(--deep-green)]">
                                                     {kcalConsumedDisplay} / {kcalGoalDisplay} kcal
                                                 </span>
-                                                <div className="h-2 w-full overflow-hidden rounded-full border border-[var(--card-border)] bg-[var(--bg-light)] sm:min-w-[6rem] sm:max-w-[12rem] sm:flex-1">
+                                                <div className="h-1.5 w-24 overflow-hidden rounded-full bg-[var(--bg-light)]">
                                                     <div
                                                         className="h-full bg-[var(--light-green)] transition-[width] duration-300 ease-out"
                                                         style={{ width: `${todayProgressPercent}%` }}
                                                     />
+                                                </div>
+                                            </div>
+                                        </div>
+                                        {/* Progreso expandido: visible solo cuando NO hay scroll */}
+                                        <div
+                                            className={`xl:hidden overflow-hidden transition-all duration-300 ease-in-out ${
+                                                scrolled ? 'max-h-0 opacity-0' : 'max-h-24 opacity-100'
+                                            }`}
+                                        >
+                                            <div className="mt-3">
+                                                <p className="mb-1 text-[10px] font-bold uppercase tracking-widest text-[var(--text-muted)]">
+                                                    Progreso hoy
+                                                </p>
+                                                <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:gap-2">
+                                                    <span className="shrink-0 text-xs font-extrabold text-[var(--deep-green)] sm:text-sm">
+                                                        {kcalConsumedDisplay} / {kcalGoalDisplay} kcal
+                                                    </span>
+                                                    <div className="h-2 w-full overflow-hidden rounded-full border border-[var(--card-border)] bg-[var(--bg-light)] sm:min-w-[6rem] sm:max-w-[12rem] sm:flex-1">
+                                                        <div
+                                                            className="h-full bg-[var(--light-green)] transition-[width] duration-300 ease-out"
+                                                            style={{ width: `${todayProgressPercent}%` }}
+                                                        />
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
@@ -869,7 +909,7 @@ export const Body = () => {
                         )}
                     </header>
 
-                    <div className="min-h-0 flex-1 overflow-y-auto">
+                    <div className="min-h-0 flex-1 overflow-y-auto" onScroll={handleMainScroll}>
                     <div className="mx-auto max-w-7xl space-y-6 px-4 py-6 sm:space-y-8 sm:px-6 sm:py-8 lg:space-y-10 lg:p-10">
                         {showTodayMealsPanel ? (
                             <div id="today-meals-panel" className="space-y-6 sm:space-y-8">
@@ -1199,8 +1239,12 @@ export const Body = () => {
                     </div>
 
                     {!showTodayMealsPanel ? (
-                    <div className="shrink-0 border-t border-[var(--card-border)] bg-[var(--white)]/95 px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-[0_-6px_24px_rgba(27,94,32,0.08)] backdrop-blur-md sm:px-6 lg:px-10">
-                        <div className="mx-auto flex max-w-7xl flex-col gap-3 sm:flex-row sm:items-stretch sm:gap-4">
+                    <div className={`shrink-0 border-t border-[var(--card-border)] bg-[var(--white)]/95 px-4 shadow-[0_-6px_24px_rgba(27,94,32,0.08)] backdrop-blur-md transition-all duration-300 ease-in-out sm:px-6 lg:px-10 ${
+                        scrolled
+                            ? "py-2 pb-[max(0.5rem,env(safe-area-inset-bottom))]"
+                            : "py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]"
+                    }`}>
+                        <div className="mx-auto flex max-w-7xl flex-row items-stretch gap-3 sm:gap-4">
                             <button
                                 type="button"
                                 onClick={handleLogMeal}
@@ -1209,28 +1253,37 @@ export const Body = () => {
                                     mealAlreadyLogged ||
                                     isLoggingMeal
                                 }
-                                className={`flex flex-1 items-center justify-center gap-3 rounded-2xl py-4 text-sm font-bold shadow-lg transition-all sm:py-5 sm:text-base
-                                    ${
-                                        !hayFotoComidaAnalizada ||
-                                        mealAlreadyLogged ||
-                                        isLoggingMeal
-                                            ? "cursor-not-allowed bg-gray-200 text-gray-500"
-                                            : "bg-[var(--deep-green)] text-white hover:bg-[var(--light-green)]"
-                                    }`}
+                                className={`flex flex-1 items-center justify-center gap-2 rounded-2xl font-bold shadow-lg transition-all duration-300 ${
+                                    scrolled ? "py-2.5 text-sm" : "py-4 text-sm sm:py-5 sm:text-base"
+                                } ${
+                                    !hayFotoComidaAnalizada ||
+                                    mealAlreadyLogged ||
+                                    isLoggingMeal
+                                        ? "cursor-not-allowed bg-gray-200 text-gray-500"
+                                        : "bg-[var(--deep-green)] text-white hover:bg-[var(--light-green)]"
+                                }`}
                             >
-                                <span className="material-symbols-outlined">save</span>
-                                {mealAlreadyLogged
-                                    ? "Registrado en el diario"
-                                    : isLoggingMeal
-                                      ? "Guardando…"
-                                      : "Registrar en el diario"}
+                                <span className="material-symbols-outlined shrink-0">save</span>
+                                <span
+                                    className={`overflow-hidden whitespace-nowrap transition-all duration-300 ease-in-out ${
+                                        scrolled ? "max-w-0 opacity-0" : "max-w-xs opacity-100"
+                                    }`}
+                                >
+                                    {mealAlreadyLogged
+                                        ? "Registrado en el diario"
+                                        : isLoggingMeal
+                                          ? "Guardando…"
+                                          : "Registrar en el diario"}
+                                </span>
                             </button>
                             <button
                                 type="button"
                                 aria-label="Compartir análisis"
                                 onClick={() => void handleShareMeal()}
                                 disabled={!hayFotoComidaAnalizada}
-                                className={`flex h-14 shrink-0 items-center justify-center rounded-2xl border-2 py-0 sm:h-auto sm:w-24 sm:py-5 ${
+                                className={`flex shrink-0 items-center justify-center rounded-2xl border-2 transition-all duration-300 ${
+                                    scrolled ? "w-12 py-2.5" : "h-14 w-14 py-0 sm:h-auto sm:w-24 sm:py-5"
+                                } ${
                                     hayFotoComidaAnalizada
                                         ? "border-[var(--deep-green)] text-[var(--deep-green)] hover:bg-[var(--bg-light)]"
                                         : "cursor-not-allowed border-gray-200 bg-gray-100 text-gray-400"

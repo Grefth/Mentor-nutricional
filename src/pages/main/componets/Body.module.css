@@ -23,3 +23,85 @@ body {
     color: var(--deep-green);
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
 }
+
+/* ── Analyzing overlay ───────────────────────────────────── */
+@keyframes shimmerSweep {
+    0%   { transform: translateX(-150%); }
+    100% { transform: translateX(150%); }
+}
+
+@keyframes sparkleFloat {
+    0%, 100% { opacity: 0; transform: scale(0) rotate(0deg); }
+    40%, 60% { opacity: 1; transform: scale(1) rotate(180deg); }
+}
+
+@keyframes labelPulse {
+    0%, 100% { opacity: 0.85; transform: scale(1); }
+    50%       { opacity: 1;    transform: scale(1.06); }
+}
+
+@keyframes shimmerBtn {
+    0%   { background-position: 200% center; }
+    100% { background-position: -200% center; }
+}
+
+.analyzeOverlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.48);
+    backdrop-filter: blur(2px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+    overflow: hidden;
+    border-radius: inherit;
+}
+
+.shimmerSweep {
+    position: absolute;
+    inset: -10px;
+    background: linear-gradient(
+        110deg,
+        transparent 30%,
+        rgba(255, 255, 255, 0.08) 44%,
+        rgba(255, 255, 255, 0.22) 50%,
+        rgba(255, 255, 255, 0.08) 56%,
+        transparent 70%
+    );
+    animation: shimmerSweep 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    pointer-events: none;
+}
+
+.sparkle {
+    position: absolute;
+    color: rgba(255, 255, 255, 0.92);
+    pointer-events: none;
+    animation: sparkleFloat var(--dur, 2s) ease-in-out var(--del, 0s) infinite;
+    text-shadow:
+        0 0 6px rgba(255, 255, 255, 0.9),
+        0 0 18px rgba(255, 255, 255, 0.5),
+        0 0 35px rgba(180, 255, 180, 0.35);
+}
+
+.analyzeLabel {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    color: white;
+    font-weight: 800;
+    font-size: 0.95rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.7);
+    animation: labelPulse 1.6s ease-in-out infinite;
+}
+
+.shimmerButton {
+    background: linear-gradient(90deg, #2E7D32 0%, #66BB6A 40%, #43A047 60%, #2E7D32 100%);
+    background-size: 250% 100%;
+    animation: shimmerBtn 1.8s linear infinite;
+}

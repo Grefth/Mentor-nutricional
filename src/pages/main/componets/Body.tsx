@@ -675,10 +675,10 @@ export const Body = () => {
                                 }`}>
                                     <div className="flex items-center gap-2">
                                         <span className="material-symbols-outlined text-[14px] text-[var(--deep-green)]">restaurant</span>
-                                        <span className="text-xs font-extrabold text-[var(--deep-green)]">
+                                        <span className="shrink-0 text-xs font-extrabold text-[var(--deep-green)]">
                                             {kcalConsumedDisplay} / {kcalGoalDisplay} kcal
                                         </span>
-                                        <div className="h-1.5 w-20 overflow-hidden rounded-full bg-[var(--bg-light)]">
+                                        <div className="h-1.5 flex-1 overflow-hidden rounded-full border border-[var(--card-border)] bg-[var(--card-border)]/60">
                                             <div className="h-full bg-[var(--light-green)] transition-[width] duration-300 ease-out" style={{ width: `${todayProgressPercent}%` }} />
                                         </div>
                                     </div>
@@ -694,7 +694,7 @@ export const Body = () => {
                                         <span className="text-sm font-extrabold text-[var(--deep-green)]">
                                             {kcalConsumedDisplay} / {kcalGoalDisplay} kcal
                                         </span>
-                                        <div className="h-2 w-32 overflow-hidden rounded-full border border-[var(--card-border)] bg-[var(--bg-light)]">
+                                        <div className="h-2 w-32 overflow-hidden rounded-full border border-[var(--card-border)] bg-[var(--card-border)]/60">
                                             <div className="h-full bg-[var(--light-green)] transition-[width] duration-300 ease-out" style={{ width: `${todayProgressPercent}%` }} />
                                         </div>
                                     </div>
@@ -714,7 +714,7 @@ export const Body = () => {
                                     <span className="shrink-0 text-xs font-extrabold text-[var(--deep-green)]">
                                         {kcalConsumedDisplay} / {kcalGoalDisplay} kcal
                                     </span>
-                                    <div className="h-2 flex-1 overflow-hidden rounded-full border border-[var(--card-border)] bg-[var(--bg-light)] sm:max-w-[12rem]">
+                                    <div className="h-2 flex-1 overflow-hidden rounded-full border border-[var(--card-border)] bg-[var(--card-border)]/60 sm:max-w-[12rem]">
                                         <div className="h-full bg-[var(--light-green)] transition-[width] duration-300 ease-out" style={{ width: `${todayProgressPercent}%` }} />
                                     </div>
                                 </div>
@@ -923,6 +923,25 @@ export const Body = () => {
                                         <div className="flex flex-col items-center">
                                             <div className="relative w-full max-w-md aspect-video rounded-2xl overflow-hidden shadow-md mb-6 border border-gray-200">
                                                 <img src={previewUrl} alt="Vista previa del platillo" className="h-full w-full object-cover" />
+                                                {isUploadingImage && (
+                                                    <div className={style.analyzeOverlay}>
+                                                        <div className={style.shimmerSweep} />
+                                                        {/* Sparkle particles */}
+                                                        <span className={style.sparkle} style={{top:'12%', left:'10%', fontSize:'18px', '--del':'0s',   '--dur':'1.9s'} as React.CSSProperties}>✦</span>
+                                                        <span className={style.sparkle} style={{top:'18%', left:'78%', fontSize:'12px', '--del':'0.5s',  '--dur':'2.3s'} as React.CSSProperties}>✦</span>
+                                                        <span className={style.sparkle} style={{top:'62%', left:'15%', fontSize:'10px', '--del':'0.9s',  '--dur':'1.7s'} as React.CSSProperties}>✦</span>
+                                                        <span className={style.sparkle} style={{top:'72%', left:'72%', fontSize:'16px', '--del':'1.3s',  '--dur':'2.1s'} as React.CSSProperties}>✦</span>
+                                                        <span className={style.sparkle} style={{top:'38%', left:'88%', fontSize:'11px', '--del':'0.25s', '--dur':'2.0s'} as React.CSSProperties}>✦</span>
+                                                        <span className={style.sparkle} style={{top:'52%', left:'6%',  fontSize:'14px', '--del':'1.1s',  '--dur':'1.8s'} as React.CSSProperties}>✦</span>
+                                                        <span className={style.sparkle} style={{top:'82%', left:'42%', fontSize:'9px',  '--del':'0.7s',  '--dur':'2.4s'} as React.CSSProperties}>✦</span>
+                                                        <span className={style.sparkle} style={{top:'8%',  left:'50%', fontSize:'13px', '--del':'1.6s',  '--dur':'1.6s'} as React.CSSProperties}>✦</span>
+                                                        {/* Center label */}
+                                                        <div className={style.analyzeLabel}>
+                                                            <span className="material-symbols-outlined" style={{fontSize:'36px'}}>auto_awesome</span>
+                                                            <span>Analizando</span>
+                                                        </div>
+                                                    </div>
+                                                )}
                                                 <button
                                                     onClick={() => {
                                                         setPreviewUrl(null);
@@ -950,7 +969,7 @@ export const Body = () => {
                                                     onClick={handleUploadImage}
                                                     disabled={isUploadingImage}
                                                     className={`flex items-center justify-center gap-2 rounded-xl px-6 py-3 font-bold text-white shadow-lg transition-all sm:px-8
-                                                        ${isUploadingImage ? 'bg-gray-400 cursor-not-allowed' : 'bg-[var(--deep-green)] hover:bg-[var(--light-green)]'}`}
+                                                        ${isUploadingImage ? `cursor-not-allowed ${style.shimmerButton}` : 'bg-[var(--deep-green)] hover:bg-[var(--light-green)]'}`}
                                                 >
                                                     {isUploadingImage ? "Analizando…" : (
                                                         <>
@@ -1132,7 +1151,7 @@ export const Body = () => {
                                     isLoggingMeal
                                 }
                                 className={`flex flex-1 items-center justify-center gap-2 rounded-2xl font-bold shadow-lg transition-all duration-300 ${
-                                    scrolled ? "py-2.5 text-sm" : "py-4 text-sm sm:py-5 sm:text-base"
+                                    scrolled ? "py-2 text-sm" : "py-3 text-sm sm:py-3.5 sm:text-base"
                                 } ${
                                     !hayFotoComidaAnalizada ||
                                     mealAlreadyLogged ||
@@ -1143,9 +1162,7 @@ export const Body = () => {
                             >
                                 <span className="material-symbols-outlined shrink-0">save</span>
                                 <span
-                                    className={`overflow-hidden whitespace-nowrap transition-all duration-300 ease-in-out ${
-                                        scrolled ? "max-w-0 opacity-0" : "max-w-xs opacity-100"
-                                    }`}
+                                    className="overflow-hidden whitespace-nowrap transition-all duration-300 ease-in-out max-w-xs opacity-100"
                                 >
                                     {mealAlreadyLogged
                                         ? "Registrado en el diario"
@@ -1160,7 +1177,7 @@ export const Body = () => {
                                 onClick={() => void handleShareMeal()}
                                 disabled={!hayFotoComidaAnalizada}
                                 className={`flex shrink-0 items-center justify-center rounded-2xl border-2 transition-all duration-300 ${
-                                    scrolled ? "w-12 py-2.5" : "h-14 w-14 py-0 sm:h-auto sm:w-24 sm:py-5"
+                                    scrolled ? "w-11 py-2" : "h-11 w-11 py-0 sm:h-auto sm:w-20 sm:py-3.5"
                                 } ${
                                     hayFotoComidaAnalizada
                                         ? "border-[var(--deep-green)] text-[var(--deep-green)] hover:bg-[var(--bg-light)]"

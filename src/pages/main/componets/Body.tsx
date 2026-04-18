@@ -221,6 +221,7 @@ export const Body = () => {
     const [selectedTodayMealId, setSelectedTodayMealId] = useState<string | null>(null);
     /** Vista dedicada «Lista hoy» (lista o detalle de una comida del día). */
     const [showTodayMealsPanel, setShowTodayMealsPanel] = useState(false);
+    const [viewSlideClass, setViewSlideClass] = useState('');
 
     const loadObjectiveForPhone = useCallback(async (phone: string) => {
         try {
@@ -518,12 +519,14 @@ export const Body = () => {
     }, [activeClient]);
 
     const closeTodayListPanel = useCallback(() => {
+        setViewSlideClass(style.viewSlideFromLeft);
         setShowTodayMealsPanel(false);
         setSelectedTodayMealId(null);
     }, []);
 
     /** Solo abre la vista de lista (no cierra el panel; para eso está «Panel»). */
     const openTodayListPanel = useCallback(() => {
+        setViewSlideClass(style.viewSlideFromRight);
         setShowTodayMealsPanel(true);
         setSelectedTodayMealId(null);
     }, []);
@@ -810,6 +813,7 @@ export const Body = () => {
 
                     <div className="min-h-0 flex-1 overflow-y-auto" onScroll={handleMainScroll}>
                     <div className="mx-auto max-w-7xl space-y-6 px-4 py-6 sm:space-y-8 sm:px-6 sm:py-8 lg:space-y-10 lg:p-10">
+                        <div key={showTodayMealsPanel ? 'lista' : 'panel'} className={viewSlideClass}>
                         {showTodayMealsPanel ? (
                             <div id="today-meals-panel" className="space-y-6 sm:space-y-8">
                                 {!selectedTodayMealId ? (
@@ -1132,6 +1136,7 @@ export const Body = () => {
                             )}
                         </div>
                         )}
+                        </div>
                     </div>
                     </div>
 

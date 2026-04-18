@@ -11,8 +11,10 @@
     --header-gradient-end: #1E293B;
     --button-bg: #00C853;
     --main-bg: #FFFFFF;
+    --text-dark: #1F2937;
     --text-muted: #6B7280;
     --input-border: #E5E7EB;
+    --input-bg: #FFFFFF;
 }
 :global(html.dark) {
     --sidebar-bg: #141f14;
@@ -22,8 +24,10 @@
     --ai-bubble-bg: #1e2a1e;
     --ai-bubble-border: #2d3b2d;
     --main-bg: #111a11;
+    --text-dark: #E8F5E9;
     --text-muted: #9CA3AF;
-    --input-border: #2d3b2d;
+    --input-border: #4a6b4a;
+    --input-bg: #1e2a1e;
 }
 .material-symbols-outlined {
     font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
@@ -61,5 +65,10 @@ body {
 }
 .input-container {
     border: 1px solid var(--input-border);
-    background-color: var(--main-bg);
+    background-color: var(--input-bg, var(--main-bg));
+}
+:global(html.dark) .input-container {
+    border-color: var(--input-border);
+    background-color: var(--input-bg);
+    box-shadow: 0 0 0 1px rgba(74, 107, 74, 0.4);
 }

@@ -94,8 +94,7 @@ export const Agente = () => {
 
         const phone = readActivePhone();
         if (!phone) {
-            navigate("/");
-            return;
+            navigate("/app");
         }
 
         sendingRef.current = true;
@@ -163,7 +162,7 @@ export const Agente = () => {
                 <button
                     className="flex items-center gap-4 rounded-xl px-4 py-3 font-medium text-[var(--text-muted)] transition-all hover:bg-white/50"
                     type="button"
-                    onClick={() => navigate("/")}
+                    onClick={() => navigate("/app")}
                 >
                     <span className="material-symbols-outlined">arrow_back</span>
                     Regresar
@@ -174,12 +173,11 @@ export const Agente = () => {
                 </div>
             </aside>
 
-            <main className="relative flex min-h-0 min-w-0 flex-1 flex-col bg-[var(--main-bg)]">
+            <main className="relative flex min-h-0 min-w-0 flex-1 flex-col bg-white dark:bg-[#111a11]">
                 <div className="flex shrink-0 items-center gap-3 border-b border-[var(--sidebar-border)] bg-[var(--sidebar-bg)] px-4 py-3 lg:hidden">
                     <button
                         type="button"
-                        onClick={() => navigate("/")}
-                        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-[var(--text-muted)] transition-colors hover:bg-white"
+                        onClick={() => navigate("/app")}
                         aria-label="Regresar al inicio"
                     >
                         <span className="material-symbols-outlined">arrow_back</span>
@@ -191,27 +189,6 @@ export const Agente = () => {
                     <ThemeToggle className="ml-auto h-9 w-9 shrink-0" />
                 </div>
 
-                <header className="z-10 shrink-0 px-4 pb-2 pt-3 sm:p-6 sm:pb-2 sm:pt-4">
-                    <div className="header-banner relative h-28 w-full overflow-hidden rounded-2xl shadow-md sm:h-36 lg:h-40">
-                        <div
-                            className="absolute inset-0 bg-cover bg-center opacity-20 mix-blend-overlay"
-                            style={{
-                                backgroundImage:
-                                    "url('https://lh3.googleusercontent.com/aida-public/AB6AXuDSMFI0HYCHsImwmTUzwKs6NhvIKeJ4fEnc5CaSHUqygjlF2xMqbtOIQAoVXC_VY5o3fibXg4RtYhTAmb-hC3PjiLG6a5PpDI_0iC3N-uywYs4d4WUD6j9RENC2wz8j7bYLVx-JjnB_PPmHB2urXEDDItt3DQIL1w0T3bPSuKgg9-o4wkKanf9-0GiMUnG7UcPd6NSpVTozi4m_8lRX6aHQ4Z1M9V80Q1kiewt2PqlWiLpbGbaoiDe3cNAmf5Ki_zAG7rBynEMd1PPI')",
-                            }}
-                        />
-                        <div className="absolute bottom-0 left-0 p-4 sm:p-6">
-                            <h2 className="mb-1 text-xl font-bold tracking-tight text-white sm:text-2xl lg:text-3xl">
-                                Asistente nutricional
-                            </h2>
-                            <p className="flex items-center gap-2 text-xs font-medium text-white/80 sm:text-sm">
-                                <span className="h-2 w-2 shrink-0 rounded-full bg-[#00C853]" />
-                                Conectado a tu historial
-                            </p>
-                        </div>
-                    </div>
-                </header>
-
                 <div className="flex-1 space-y-4 overflow-y-auto px-3 py-3 sm:space-y-6 sm:px-6 sm:py-4" id="chat-container">
                     <div className="flex justify-center">
                         <span className="text-xs font-semibold text-[var(--text-muted)] bg-[var(--bg-light)] px-3 py-1 rounded-full uppercase tracking-wider">
@@ -222,12 +199,12 @@ export const Agente = () => {
                     {messages.map((m) =>
                         m.role === "assistant" ? (
                             <div key={m.id} className="flex max-w-3xl items-start gap-2 sm:gap-3">
-                                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-[var(--ai-bubble-border)] bg-[var(--bg-light)] sm:h-9 sm:w-9">
-                                    <span className="material-symbols-outlined text-[var(--deep-green)]">smart_toy</span>
+                                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-[#E5E7EB] dark:border-[#2d3b2d] bg-[#F1F8E9] dark:bg-[#1e2a1e] sm:h-9 sm:w-9">
+                                    <span className="material-symbols-outlined text-[#2E7D32] dark:text-[#81C784]">smart_toy</span>
                                 </div>
                                 <div className="flex flex-col gap-1 items-start min-w-0">
-                                    <span className="ml-1 text-xs font-bold text-[var(--text-muted)]">Asistente</span>
-                                    <div className="ai-message rounded-2xl rounded-tl-none p-3 text-sm leading-relaxed shadow-sm break-words sm:p-4 sm:text-base">
+                                    <span className="ml-1 text-xs font-bold text-gray-500 dark:text-gray-400">Asistente</span>
+                                    <div className="rounded-2xl rounded-tl-none border border-[#E5E7EB] dark:border-[#2d3b2d] bg-white dark:bg-[#1e2a1e] text-gray-800 dark:text-[#E8F5E9] p-3 text-sm leading-relaxed shadow-sm break-words sm:p-4 sm:text-base">
                                         <ChatMarkdown content={m.content} variant="assistant" />
                                     </div>
                                 </div>
@@ -240,8 +217,8 @@ export const Agente = () => {
                                         <ChatMarkdown content={m.content} variant="user" />
                                     </div>
                                 </div>
-                                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-[var(--sidebar-border)] bg-[var(--bg-light)] sm:h-9 sm:w-9">
-                                    <span className="material-symbols-outlined text-[20px] text-[var(--text-muted)] sm:text-[22px]">person</span>
+                                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-[#E5E7EB] dark:border-[#2d3b2d] bg-[#F1F8E9] dark:bg-[#1e2a1e] sm:h-9 sm:w-9">
+                                    <span className="material-symbols-outlined text-[20px] text-gray-500 dark:text-gray-400 sm:text-[22px]">person</span>
                                 </div>
                             </div>
                         )
@@ -249,12 +226,12 @@ export const Agente = () => {
 
                     {loading ? (
                         <div className="flex max-w-3xl items-start gap-2 sm:gap-3">
-                            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-[var(--ai-bubble-border)] bg-[var(--bg-light)] sm:h-9 sm:w-9">
-                                <span className="material-symbols-outlined animate-pulse text-[var(--deep-green)]">smart_toy</span>
+                            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-[#E5E7EB] dark:border-[#2d3b2d] bg-[#F1F8E9] dark:bg-[#1e2a1e] sm:h-9 sm:w-9">
+                                <span className="material-symbols-outlined animate-pulse text-[#2E7D32] dark:text-[#81C784]">smart_toy</span>
                             </div>
                             <div className="flex flex-col items-start gap-1">
-                                <span className="ml-1 text-xs font-bold text-[var(--text-muted)]">Asistente</span>
-                                <div className="ai-message rounded-2xl rounded-tl-none p-3 text-sm text-[var(--text-muted)] shadow-sm sm:p-4">
+                                <span className="ml-1 text-xs font-bold text-gray-500 dark:text-gray-400">Asistente</span>
+                                <div className="rounded-2xl rounded-tl-none border border-[#E5E7EB] dark:border-[#2d3b2d] bg-white dark:bg-[#1e2a1e] text-gray-500 dark:text-gray-400 p-3 text-sm shadow-sm sm:p-4">
                                     Pensando…
                                 </div>
                             </div>
@@ -265,7 +242,7 @@ export const Agente = () => {
                 </div>
 
                 <div className="shrink-0 px-3 pb-3 pt-2 sm:p-6 sm:pt-2">
-                    <div className="input-container flex items-end gap-1 rounded-xl p-2 shadow-sm sm:gap-2">
+                    <div className="flex items-end gap-1 rounded-xl border border-[#E5E7EB] dark:border-[#4a6b4a] bg-white dark:bg-[#1e2a1e] p-2 shadow-sm ring-1 ring-transparent dark:ring-[#2d3b2d] sm:gap-2">
                         <button
                             type="button"
                             className="mb-0.5 self-end rounded-lg p-2 text-[var(--text-muted)] transition-colors hover:bg-[var(--bg-light)] hover:text-[var(--deep-green)] sm:p-2.5"
@@ -282,7 +259,7 @@ export const Agente = () => {
                                 onKeyDown={onKeyDown}
                                 disabled={loading}
                                 rows={1}
-                                className="max-h-32 w-full resize-none border-0 bg-transparent p-0 text-sm text-[var(--text-dark)] placeholder-[var(--text-muted)] focus:ring-0 sm:text-base"
+                                className="max-h-32 w-full resize-none border-0 bg-transparent p-0 text-sm text-gray-800 dark:text-[#E8F5E9] placeholder-gray-400 dark:placeholder-gray-500 focus:ring-0 sm:text-base"
                                 placeholder="Escribe tu pregunta sobre tu alimentación…"
                             />
                         </div>

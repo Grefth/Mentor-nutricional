@@ -42,6 +42,10 @@
     font-weight: 700;
     color: var(--deep-green);
 }
+:global(html.dark) .badge {
+    background: linear-gradient(135deg, #1a3a1a 0%, #153015 100%);
+    color: #81C784;
+}
 
 .badge .material-symbols-outlined {
     font-size: 20px;
@@ -152,6 +156,9 @@
     color: var(--deep-green);
     margin-bottom: 60px;
 }
+:global(html.dark) .featuresTitle {
+    color: #81C784;
+}
 
 @media (min-width: 768px) {
     .featuresTitle {
@@ -204,6 +211,10 @@
     align-items: center;
     justify-content: center;
 }
+:global(html.dark) .featureIcon {
+    background: linear-gradient(135deg, #1a3a1a 0%, #153015 100%);
+    box-shadow: 0 0 0 1px #2d4a30;
+}
 
 .featureIcon .material-symbols-outlined {
     font-size: 40px;
@@ -215,6 +226,9 @@
     font-weight: 800;
     color: var(--deep-green);
     margin: 0 0 16px;
+}
+:global(html.dark) .featureCard h3 {
+    color: #81C784;
 }
 
 .featureCard p {

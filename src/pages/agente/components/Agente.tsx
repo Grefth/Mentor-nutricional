@@ -95,6 +95,7 @@ export const Agente = () => {
         const phone = readActivePhone();
         if (!phone) {
             navigate("/app");
+            return;
         }
 
         sendingRef.current = true;
